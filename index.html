@@ -18843,12 +18843,24 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
 .addCard:hover{border-color:rgba(255,255,255,.4);color:#fff;background:rgba(255,255,255,.06);}
 .addCard .plus{font-size:1.8rem;}
 /* ---------- Visionneuse plein écran ---------- */
-#viewer{position:fixed;inset:0;background:#0a0a12;display:none;flex-direction:column;}
+#viewer{position:fixed;inset:0;background:radial-gradient(circle at 15% 0%,#181828,#0a0a12 55%);display:none;flex-direction:column;}
 #viewer.show{display:flex;animation:popIn .28s cubic-bezier(.2,.8,.2,1);}
 #vTop{flex:0 0 auto;padding:.85rem 1.2rem;display:flex;align-items:center;gap:.7rem;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);}
 #vTop button{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:#f2f2f7;width:36px;height:36px;font-size:.85rem;cursor:pointer;flex:0 0 auto;transition:background .15s,transform .12s;}
 #vTop button:hover{background:rgba(255,255,255,.16);}
 #vTop button:active{transform:scale(.92);}
+#resourcesBtn{margin-left:auto;}
+#resourcesPanel{display:none;flex-direction:column;gap:.6rem;padding:.9rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02);}
+#resourcesPanel.show{display:flex;}
+#resourcesPanelHead{font-size:.75rem;color:#c9c9e0;}
+#resourcesGrid{display:flex;flex-wrap:wrap;gap:.6rem;}
+.res-thumb-wrap{position:relative;width:56px;height:56px;flex:0 0 auto;}
+.res-thumb{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.15);cursor:pointer;display:block;}
+.res-thumb-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ff5f6d;color:#fff;border:none;font-size:.6rem;line-height:18px;cursor:pointer;padding:0;}
+#resourceLightbox{display:none;position:fixed;inset:0;z-index:99998;background:rgba(5,3,10,.85);align-items:center;justify-content:center;padding:30px;}
+#resourceLightbox.show{display:flex;}
+#resourceLightboxImg{max-width:100%;max-height:100%;border-radius:12px;}
+#resourceLightboxClose{position:absolute;top:20px;right:20px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:1rem;cursor:pointer;}
 #vTitle{flex:1;font-size:1.05rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 #saveStatus{font-size:.68rem;color:#67677a;flex:0 0 auto;}
 #saveStatus.saved{color:#30d158;animation:pulseOk .38s;}
@@ -18869,6 +18881,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
 .toolColorLabel{display:inline-flex;align-items:center;gap:.2rem;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:0 .35rem;height:28px;font-size:.72rem;cursor:pointer;}
 .toolColorLabel input[type=color]{width:20px;height:20px;padding:0;border:none;background:none;cursor:pointer;}
 #toolbar select{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:7px;color:#f2f2f7;height:28px;font-size:.7rem;padding:0 .3rem;cursor:pointer;}
+#toolbar select option{background:#1c1c2e;color:#f2f2f7;}
 #content img.talco-img-selected{outline:2px solid #6d5dfc;outline-offset:2px;}
 #content{flex:1;overflow-y:auto;padding:1.5rem 1.8rem;font-size:1.03rem;line-height:1.85;max-width:880px;}
 #content:focus{outline:none;}
@@ -18904,8 +18917,14 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     <button id="backBtn" title="Retour">←</button>
     <div id="vTitle">—</div>
     <span id="saveStatus"></span>
+    <button id="resourcesBtn" title="Images du cours">🖼️</button>
     ${isAdminUser109 ? '<button id="gearBtn" title="Paramètres de la matière">⚙️</button><button id="delBtn" title="Supprimer la matière">🗑️</button>' : ''}
   </div>
+  <div id="resourcesPanel">
+    <div id="resourcesPanelHead">Ressources${isAdminUser109 ? ' <span style="font-weight:400;opacity:.6;">— cliquez pour agrandir, ⨯ pour supprimer</span>' : ''}</div>
+    <div id="resourcesGrid"></div>
+  </div>
+  <div id="resourceLightbox"><img id="resourceLightboxImg" alt=""><button id="resourceLightboxClose" type="button">✕</button></div>
   ${isAdminUser109 ? `
   <div id="settingsRow">
     <div class="field"><label>Titre</label><input type="text" id="fTitre"></div>
@@ -18978,6 +18997,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     <button type="button" data-align="center">↔ Centré</button>
     <button type="button" data-align="right">➡ Droite</button>
     <button type="button" id="imgRoundedToggle">◻ Coins arrondis</button>
+    <button type="button" id="imgInvertToggle">◐ Blanc sur noir</button>
     <button type="button" id="imgDeleteBtn" style="color:#ff6470;">🗑 Supprimer</button>
   </div>` : ''}
   <div id="content" ${isAdminUser109 ? 'contenteditable="true" spellcheck="false"' : ''}></div>
@@ -19106,6 +19126,9 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
       if (boxBgInput) boxBgInput.value = (s && s.bgColor) || '#0a0a12';
     }
     content.style.backgroundColor = (s && s.bgColor) || '';
+    seqResources = (s && s.resources) || [];
+    renderResources();
+    resourcesPanel.classList.remove('show');
     if (!s) { content.innerHTML = isAdmin ? '' : '<p class="empty-seq">Aucune séquence pour l\\'instant.</p>'; return; }
     let html = '';
     if (s.img) html += '<img src="' + s.img + '" style="max-width:100%;border-radius:10px;margin-bottom:1rem;" alt="">';
@@ -19256,6 +19279,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
         img: seqCoverPreview.classList.contains('show') ? seqCoverPreview.src : '',
         contentHtml: content.getAttribute('contenteditable') === 'true' ? content.innerHTML : (idx > -1 ? seqs[idx].contentHtml : ''),
         bgColor: content.style.backgroundColor ? document.getElementById('boxBgInput').value : '',
+        resources: seqResources,
         order: idx > -1 ? (seqs[idx].order || 0) : 0,
       };
       if (idx > -1) seqs[idx] = updatedSeq; else seqs.push(updatedSeq);
@@ -19273,6 +19297,12 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     }).catch(e => { saveStatus.textContent = 'Erreur : ' + e.message; });
   }
   content.addEventListener('input', scheduleSave);
+  content.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    document.execCommand('insertText', false, text);
+    scheduleSave();
+  });
   [fTitre, fEmoji, fImg, fUrl, fShape, seqTitreInput].forEach(inp => inp.addEventListener('input', scheduleSave));
   fShape.addEventListener('change', scheduleSave);
 
@@ -19290,6 +19320,8 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     scheduleSave();
   });
 
+  try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+
   document.getElementById('toolbar').addEventListener('click', (e) => {
     const btn = e.target.closest('button[data-cmd]');
     if (!btn) return;
@@ -19305,16 +19337,57 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     document.execCommand('insertHTML', false, '<a href="' + url.replace(/"/g,'&quot;') + '" target="_blank" rel="noopener noreferrer">' + label.replace(/</g,'&lt;') + '</a>');
   });
   document.getElementById('imgBtn').addEventListener('click', () => {
-    content.focus();
     const src = prompt('Image — collez une base64 ("data:image/...") ou une URL Cloudinary :', '');
     if (!src) return;
-    document.execCommand('insertHTML', false, '<img src="' + src.replace(/"/g,'&quot;') + '" style="max-width:100%;border-radius:8px;">');
-    scheduleSave();
+    addResource(src);
   });
   let lastRange = null;
   content.addEventListener('mouseup', () => { const sel = window.getSelection(); if (sel.rangeCount) lastRange = sel.getRangeAt(0); });
   content.addEventListener('keyup', () => { const sel = window.getSelection(); if (sel.rangeCount) lastRange = sel.getRangeAt(0); });
   function restoreSelection(){ const sel = window.getSelection(); if (lastRange) { sel.removeAllRanges(); sel.addRange(lastRange); } }
+
+  // ---------- Ressources (images) de la séquence — plus d'images en ligne dans
+  // le texte : elles vivent toutes dans le panneau "Ressources" en haut à droite,
+  // sous forme de petites vignettes carrées, pour laisser tout l'espace au texte.
+  let seqResources = [];
+  const resourcesBtn = document.getElementById('resourcesBtn');
+  const resourcesPanel = document.getElementById('resourcesPanel');
+  const resourcesGrid = document.getElementById('resourcesGrid');
+  const resourceLightbox = document.getElementById('resourceLightbox');
+  const resourceLightboxImg = document.getElementById('resourceLightboxImg');
+  function renderResources(){
+    resourcesGrid.innerHTML = '';
+    if (!seqResources.length) {
+      resourcesGrid.innerHTML = '<span style="font-size:.72rem;opacity:.55;">Aucune image pour l\\'instant.</span>';
+      return;
+    }
+    seqResources.forEach((src, i) => {
+      const wrap = document.createElement('div'); wrap.className = 'res-thumb-wrap';
+      const img = document.createElement('img'); img.className = 'res-thumb'; img.src = src;
+      img.addEventListener('click', () => { resourceLightboxImg.src = src; resourceLightbox.classList.add('show'); });
+      wrap.appendChild(img);
+      if (isAdmin) {
+        const del = document.createElement('button'); del.type = 'button'; del.className = 'res-thumb-del'; del.textContent = '✕';
+        del.title = 'Supprimer cette image';
+        del.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!(await itnConfirm('Supprimer cette image des ressources ?'))) return;
+          seqResources.splice(i, 1); renderResources(); scheduleSave();
+        });
+        wrap.appendChild(del);
+      }
+      resourcesGrid.appendChild(wrap);
+    });
+  }
+  function addResource(src){
+    seqResources.push(src);
+    renderResources();
+    resourcesPanel.classList.add('show');
+    scheduleSave();
+  }
+  resourcesBtn.addEventListener('click', () => resourcesPanel.classList.toggle('show'));
+  document.getElementById('resourceLightboxClose').addEventListener('click', () => resourceLightbox.classList.remove('show'));
+  resourceLightbox.addEventListener('click', (e) => { if (e.target === resourceLightbox) resourceLightbox.classList.remove('show'); });
 
   // ---------- Police, taille, couleur du texte, surlignage, fond de la case ----------
   document.getElementById('fontFamilySel').addEventListener('change', (e) => {
@@ -19359,11 +19432,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     const file = e.target.files[0]; if (!file) return;
     try {
       const dataUrl = await fileToDataUrl(file);
-      content.focus();
-      const sel = window.getSelection();
-      if (lastRange) { sel.removeAllRanges(); sel.addRange(lastRange); }
-      document.execCommand('insertHTML', false, '<img src="' + dataUrl.replace(/"/g,'&quot;') + '" style="max-width:100%;border-radius:8px;">');
-      scheduleSave();
+      addResource(dataUrl);
     } catch (err) { itnAlert('Erreur image : ' + err.message); }
     e.target.value = '';
   });
@@ -19391,6 +19460,8 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     imgAdjustRow.querySelectorAll('[data-align]').forEach(b => b.classList.toggle('active', b.dataset.align === align));
     const rounded = !selectedImg.style.borderRadius || selectedImg.style.borderRadius !== '0px';
     document.getElementById('imgRoundedToggle').classList.toggle('active', rounded);
+    const inverted = selectedImg.style.filter && selectedImg.style.filter.indexOf('invert') !== -1;
+    document.getElementById('imgInvertToggle').classList.toggle('active', inverted);
   }
   function selectImg(img){
     if (selectedImg) selectedImg.classList.remove('talco-img-selected');
@@ -19427,6 +19498,13 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     if (!selectedImg) return;
     const rounded = selectedImg.style.borderRadius && selectedImg.style.borderRadius !== '0px';
     selectedImg.style.borderRadius = rounded ? '0px' : '8px';
+    refreshImgAdjustUI();
+    scheduleSave();
+  });
+  document.getElementById('imgInvertToggle').addEventListener('click', () => {
+    if (!selectedImg) return;
+    const inverted = selectedImg.style.filter && selectedImg.style.filter.indexOf('invert') !== -1;
+    selectedImg.style.filter = inverted ? '' : 'invert(1) hue-rotate(180deg)';
     refreshImgAdjustUI();
     scheduleSave();
   });
