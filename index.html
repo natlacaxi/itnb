@@ -12,9 +12,10 @@
     <meta name="description"
         content="TalcoITN (Talco IT Networks) — portail sécurisé regroupant Exchange, Cloud, Intelligence, Music, Scientis, Enseignement et Pratics en un seul accès.">
     <meta name="keywords"
-        content="TalcoITN, ITN, Talco, Talco IT Networks, TalcoIT, TalcoITNetworks, TalcoExchange, portail TalcoITN, messagerie TalcoITN">
+        content="TalcoITN, ITN, ITNB, Talco, Talco IT Networks, TalcoIT, TalcoITNetworks, TalcoExchange, portail TalcoITN, messagerie TalcoITN, ITNB github, itnb github">
     <meta name="robots" content="index, follow">
     <meta name="google-site-verification" content="zNciCp5YvxtWS_1Den-GxIlosV3aWwCbg4xGYtijjZc" />
+    <meta name="google-site-verification" content="ZNV4K4tp6H2UVQvWISbq5GXNQWWoUotXpft4prphb5A" />
     <meta name="author" content="TalcoITN">
     <link rel="canonical" id="canonicalLink" href="/">
 
@@ -41,7 +42,7 @@
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "TalcoITN",
-  "alternateName": ["ITN", "Talco", "Talco IT Networks", "TalcoITNetworks"],
+  "alternateName": ["ITN", "ITNB", "Talco", "Talco IT Networks", "TalcoITNetworks"],
   "url": "PLACEHOLDER_ORIGIN",
   "description": "Portail sécurisé TalcoITN regroupant Exchange, Cloud, Intelligence, Music, Scientis, Enseignement et Pratics."
 }
@@ -2457,6 +2458,78 @@
 </head>
 
 <body>
+
+    <style>
+        #itnModalOverlay {
+            position: fixed; inset: 0; z-index: 99999;
+            background: rgba(5,3,10,0.55);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        #itnModalOverlay.show { display: flex; }
+        #itnModalBox {
+            width: 100%; max-width: 340px;
+            background: linear-gradient(160deg, rgba(24,20,38,0.98), rgba(14,12,22,0.98));
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 22px;
+            padding: 22px 20px 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+            transform: scale(.92); opacity: 0; transition: transform .18s ease, opacity .18s ease;
+            font-family: 'Sora','Inter',sans-serif;
+        }
+        #itnModalOverlay.show #itnModalBox { transform: scale(1); opacity: 1; }
+        #itnModalMsg { color: #f1f0f7; font-size: .92rem; line-height: 1.45; white-space: pre-line; margin-bottom: 18px; text-align: center; }
+        #itnModalBtns { display: flex; gap: 10px; }
+        #itnModalBtns button {
+            flex: 1; border: none; cursor: pointer; padding: 11px 0; border-radius: 14px;
+            font-size: .86rem; font-weight: 600; font-family: inherit; transition: filter .15s, transform .1s;
+        }
+        #itnModalBtns button:active { transform: scale(.96); }
+        #itnModalCancel { background: rgba(255,255,255,0.08); color: #cfcfe0; }
+        #itnModalCancel:hover { filter: brightness(1.3); }
+        #itnModalOk { background: linear-gradient(135deg,#7c5cff,#ff5fa8); color: #fff; }
+        #itnModalOk:hover { filter: brightness(1.1); }
+    </style>
+    <div id="itnModalOverlay">
+        <div id="itnModalBox">
+            <div id="itnModalMsg"></div>
+            <div id="itnModalBtns">
+                <button id="itnModalCancel" type="button">Annuler</button>
+                <button id="itnModalOk" type="button">OK</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Modales maison (carré arrondi) — remplacent confirm()/alert() natifs
+        // pour ne jamais afficher le domaine d'hébergement dans la boîte de dialogue.
+        function itnModal(message, { cancelable = true } = {}) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('itnModalOverlay');
+                const box = document.getElementById('itnModalBox');
+                document.getElementById('itnModalMsg').textContent = message;
+                const cancelBtn = document.getElementById('itnModalCancel');
+                const okBtn = document.getElementById('itnModalOk');
+                cancelBtn.style.display = cancelable ? '' : 'none';
+                overlay.classList.add('show');
+                function cleanup(result) {
+                    overlay.classList.remove('show');
+                    okBtn.removeEventListener('click', onOk);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlay);
+                    resolve(result);
+                }
+                function onOk() { cleanup(true); }
+                function onCancel() { cleanup(false); }
+                function onOverlay(e) { if (e.target === overlay && cancelable) cleanup(false); }
+                okBtn.addEventListener('click', onOk);
+                cancelBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlay);
+            });
+        }
+        function itnConfirm(message) { return itnModal(message, { cancelable: true }); }
+        function itnAlert(message) { return itnModal(message, { cancelable: false }); }
+    </script>
 
     <div id="ambient">
         <div class="blob blob1"></div>
@@ -17331,8 +17404,10 @@ window.addEventListener('load', () => {
                 const navRect = nav.getBoundingClientRect();
                 const w = slider.offsetWidth, h = slider.offsetHeight;
                 let left = e.clientX - grabOffsetX - navRect.left + nav.scrollLeft;
-                const maxLeft = nav.scrollWidth - w;
-                left = Math.max(0, Math.min(left, maxLeft));
+                const items = [...nav.querySelectorAll(itemSelector)];
+                const minLeft = items.length ? Math.min(...items.map(it => it.offsetLeft)) : 0;
+                const maxLeft = items.length ? Math.max(...items.map(it => it.offsetLeft + it.offsetWidth - w)) : (nav.scrollWidth - w);
+                left = Math.max(minLeft, Math.min(left, maxLeft));
                 const nearest = nearestItem(e.clientX);
                 const top = nearest ? nearest.offsetTop : (activeItem ? activeItem.offsetTop : 0);
                 slider.style.width = w + 'px'; slider.style.height = h + 'px';
@@ -18173,8 +18248,8 @@ p{color:#8a8aa0;font-size:.82rem;padding:2rem;text-align:center;}
           div.querySelector('.rbtn-toggle').addEventListener('click', ()=>{
             doc.ref.update({status: resolved ? 'pending' : 'resolved'}).then(loadReports);
           });
-          div.querySelector('.rbtn-del').addEventListener('click', ()=>{
-            if(!confirm('Supprimer définitivement ce signalement ?')) return;
+          div.querySelector('.rbtn-del').addEventListener('click', async ()=>{
+            if(!(await itnConfirm('Supprimer définitivement ce signalement ?'))) return;
             doc.ref.delete().then(loadReports);
           });
           reportsList.appendChild(div);
@@ -18651,8 +18726,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
     runTimer = setTimeout(runCode, 500);
   });
   runBtn.addEventListener('click', runCode);
-  resetBtn.addEventListener('click', ()=>{
-    if(!confirm('Réinitialiser le code du bac à sable ?')) return;
+  resetBtn.addEventListener('click', async ()=>{
+    if(!(await itnConfirm('Réinitialiser le code du bac à sable ?'))) return;
     codeArea.value = DEFAULT_CODE;
     runCode();
     notifyParent('🔄', 'Bac à sable réinitialisé');
@@ -19100,16 +19175,16 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
       matieres.push(Object.assign({id: ref.id}, data));
       renderGrid();
       openViewer(ref.id);
-    }).catch(e => alert('Erreur : ' + e.message));
+    }).catch(e => itnAlert('Erreur : ' + e.message));
   }
-  function deleteMatiere(id){
+  async function deleteMatiere(id){
     const c = matieres.find(m => m.id === id);
-    if (!confirm('Supprimer définitivement "' + (c ? c.titre : '') + '" ?')) return;
+    if (!(await itnConfirm('Supprimer définitivement "' + (c ? c.titre : '') + '" ?'))) return;
     matieresRef.doc(id).delete().then(() => {
       matieres = matieres.filter(m => m.id !== id);
       renderGrid();
       if (activeId === id) { viewer.classList.remove('show'); content.innerHTML=''; }
-    }).catch(e => alert('Erreur : ' + e.message));
+    }).catch(e => itnAlert('Erreur : ' + e.message));
   }
   delBtn.addEventListener('click', () => { if (activeId) deleteMatiere(activeId); });
 
@@ -19122,20 +19197,20 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     matieresRef.doc(activeId).set({ sequences: m.sequences }, { merge: true }).then(() => {
       renderSeqBar(); selectSequence(newSeq.id);
       logAndToast('Séquence ajoutée');
-    }).catch(e => alert('Erreur : ' + e.message));
+    }).catch(e => itnAlert('Erreur : ' + e.message));
   }
   document.getElementById('seqAddBtn').addEventListener('click', addSequence);
 
-  function deleteSequence(seqId){
+  async function deleteSequence(seqId){
     const m = matieres.find(x => x.id === activeId); if (!m) return;
-    if (!confirm('Supprimer cette séquence ?')) return;
+    if (!(await itnConfirm('Supprimer cette séquence ?'))) return;
     m.sequences = getSequences(m).filter(s => s.id !== seqId);
     matieresRef.doc(activeId).set({ sequences: m.sequences }, { merge: true }).then(() => {
       if (activeSeqId === seqId) activeSeqId = null;
       renderSeqBar();
       const seqs = getSequences(m).slice().sort((a,b) => (a.order||0)-(b.order||0));
       if (seqs.length) selectSequence(seqs[0].id); else selectSequence(null);
-    }).catch(e => alert('Erreur : ' + e.message));
+    }).catch(e => itnAlert('Erreur : ' + e.message));
   }
 
   function moveSequence(seqId, dir){
@@ -19146,7 +19221,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     if (j < 0 || j >= seqs.length) return;
     [seqs[i].order, seqs[j].order] = [seqs[j].order, seqs[i].order];
     m.sequences = seqs;
-    matieresRef.doc(activeId).set({ sequences: m.sequences }, { merge: true }).then(() => renderSeqBar()).catch(e => alert('Erreur : ' + e.message));
+    matieresRef.doc(activeId).set({ sequences: m.sequences }, { merge: true }).then(() => renderSeqBar()).catch(e => itnAlert('Erreur : ' + e.message));
   }
 
   function logAndToast(msg){ saveStatus.textContent = msg + ' ✓'; saveStatus.classList.add('saved'); }
@@ -19207,7 +19282,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
       const dataUrl = await fileToDataUrl(file);
       seqCoverPreview.src = dataUrl; seqCoverPreview.classList.add('show');
       scheduleSave();
-    } catch (err) { alert('Erreur image : ' + err.message); }
+    } catch (err) { itnAlert('Erreur image : ' + err.message); }
     e.target.value = '';
   });
   document.getElementById('seqImgClearBtn').addEventListener('click', () => {
@@ -19289,7 +19364,7 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
       if (lastRange) { sel.removeAllRanges(); sel.addRange(lastRange); }
       document.execCommand('insertHTML', false, '<img src="' + dataUrl.replace(/"/g,'&quot;') + '" style="max-width:100%;border-radius:8px;">');
       scheduleSave();
-    } catch (err) { alert('Erreur image : ' + err.message); }
+    } catch (err) { itnAlert('Erreur image : ' + err.message); }
     e.target.value = '';
   });
 
@@ -19355,9 +19430,9 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     refreshImgAdjustUI();
     scheduleSave();
   });
-  document.getElementById('imgDeleteBtn').addEventListener('click', () => {
+  document.getElementById('imgDeleteBtn').addEventListener('click', async () => {
     if (!selectedImg) return;
-    if (!confirm('Supprimer cette image du cours ?')) return;
+    if (!(await itnConfirm('Supprimer cette image du cours ?'))) return;
     selectedImg.remove();
     selectedImg = null;
     imgAdjustRow.classList.remove('show');
@@ -20021,9 +20096,9 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
       card.querySelector('.ta').textContent = 'par ' + (t.authorName||'?') + ' · ' + fmtDate(t.createdAt);
       card.addEventListener('click', ()=> openTopic(t.id));
       if(canDeleteTopic){
-        card.querySelector('.topic-del').addEventListener('click', (e)=>{
+        card.querySelector('.topic-del').addEventListener('click', async (e)=>{
           e.stopPropagation();
-          if(!confirm('Supprimer définitivement le sujet "'+(t.title||'Sans titre')+'" et tous ses messages ?')) return;
+          if(!(await itnConfirm('Supprimer définitivement le sujet "'+(t.title||'Sans titre')+'" et tous ses messages ?'))) return;
           deleteTopic(t.id);
         });
       }
@@ -20046,7 +20121,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
       }
       renderTopics();
     }).catch(e=>{
-      alert('Erreur lors de la suppression : '+e.message);
+      itnAlert('Erreur lors de la suppression : '+e.message);
     });
   }
 
@@ -21163,8 +21238,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                         div.querySelector('.rbtn-toggle').addEventListener('click', () => {
                             doc.ref.update({ status: resolved ? 'pending' : 'resolved' }).then(loadReportsList);
                         });
-                        div.querySelector('.rbtn-del').addEventListener('click', () => {
-                            if (!confirm('Supprimer définitivement ce signalement ?')) return;
+                        div.querySelector('.rbtn-del').addEventListener('click', async () => {
+                            if (!(await itnConfirm('Supprimer définitivement ce signalement ?'))) return;
                             doc.ref.delete().then(loadReportsList);
                         });
                         list.appendChild(div);
@@ -21258,14 +21333,14 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
         async function admDeleteUser(uid) {
             const u = admUsersCache.find(x => x.uid === uid);
             if (!u) return;
-            if (!confirm(`Supprimer le profil de "${u.username}" ? Il perdra son nom et l'accès à ses conversations. (Le compte Firebase Auth doit être supprimé côté console Firebase, ou via une Cloud Function.)`)) return;
+            if (!(await itnConfirm(`Supprimer le profil de "${u.username}" ? Il perdra son nom et l'accès à ses conversations. (Le compte Firebase Auth doit être supprimé côté console Firebase, ou via une Cloud Function.)`))) return;
             try {
                 await db.collection('users').doc(uid).delete();
                 logHistory(`Profil supprimé (admin) : ${u.username}`);
                 admLoadUsers();
                 showToast2(`Profil "${u.username}" supprimé.`);
             } catch (e) {
-                alert('Erreur suppression : ' + e.message);
+                itnAlert('Erreur suppression : ' + e.message);
             }
         }
 
@@ -21280,8 +21355,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             const pseudo = document.getElementById('admNewPseudo').value.trim();
             const pass = document.getElementById('admNewPass').value;
             const btn = document.getElementById('admCreateBtn');
-            if (!pseudo || pass.length < 6) { alert('Pseudo et mot de passe (6 car. min.) requis.'); return; }
-            if (!fbReady) { alert('Firebase non configuré.'); return; }
+            if (!pseudo || pass.length < 6) { itnAlert('Pseudo et mot de passe (6 car. min.) requis.'); return; }
+            if (!fbReady) { itnAlert('Firebase non configuré.'); return; }
             btn.textContent = '…'; btn.disabled = true;
             try {
                 // Instance secondaire pour ne pas remplacer la session admin en cours.
@@ -21304,7 +21379,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 admLoadUsers();
                 showToast2(`Compte "${pseudo}" créé.`);
             } catch (e) {
-                alert('Erreur création : ' + fbErrorMessage(e));
+                itnAlert('Erreur création : ' + fbErrorMessage(e));
             } finally {
                 btn.textContent = '+ Ajouter à distance'; btn.disabled = false;
             }
@@ -21333,11 +21408,11 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
            une Cloud Function côté serveur) — seulement les profils, ce qui suffit
            à les faire disparaître de l'app et libère les pseudos. */
         async function admPurgeAllExceptAdmins() {
-            if (!fbReady) { alert('Firebase non configuré.'); return; }
+            if (!fbReady) { itnAlert('Firebase non configuré.'); return; }
             const protectedNames = ['anton', 'talco'];
             const targets = admUsersCache.filter(u => !protectedNames.includes((u.username || '').toLowerCase()));
             if (targets.length === 0) { showToast2('Rien à supprimer — aucun compte test trouvé.'); return; }
-            if (!confirm(`Supprimer ${targets.length} compte(s) (tous sauf Anton et Talco) ? Action définitive.`)) return;
+            if (!(await itnConfirm(`Supprimer ${targets.length} compte(s) (tous sauf Anton et Talco) ? Action définitive.`))) return;
             const btn = document.getElementById('admPurgeBtn');
             btn.disabled = true; btn.textContent = 'Suppression…';
             try {
@@ -21352,7 +21427,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 admLoadUsers();
                 showToast2(`${targets.length} compte(s) supprimé(s).`);
             } catch (e) {
-                alert('Erreur purge : ' + e.message);
+                itnAlert('Erreur purge : ' + e.message);
             } finally {
                 btn.disabled = false; btn.textContent = '🧹 Supprimer tous les comptes (sauf Anton & Talco)';
             }
@@ -21392,8 +21467,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 });
                 list.appendChild(row);
             });
-            document.getElementById('cardResetBtn').addEventListener('click', () => {
-                if (!confirm('Réinitialiser le style et les couleurs des cartes à leurs valeurs par défaut ?')) return;
+            document.getElementById('cardResetBtn').addEventListener('click', async () => {
+                if (!(await itnConfirm('Réinitialiser le style et les couleurs des cartes à leurs valeurs par défaut ?'))) return;
                 localStorage.removeItem('talcoitn_cardstyle');
                 localStorage.removeItem('talcoitn_cardcolors');
                 localStorage.removeItem('talcoitn_cardorder');
@@ -21478,8 +21553,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 logHistory('[Admin] Ordre par défaut des cartes modifié');
             }
             renderOrderRows();
-            document.getElementById('admCardResetBtn').addEventListener('click', () => {
-                if (!confirm('Réinitialiser les réglages globaux (style, couleurs, ordre par défaut) pour tous les utilisateurs ?')) return;
+            document.getElementById('admCardResetBtn').addEventListener('click', async () => {
+                if (!(await itnConfirm('Réinitialiser les réglages globaux (style, couleurs, ordre par défaut) pour tous les utilisateurs ?'))) return;
                 localStorage.removeItem('talcoitn_admin_cardstyle');
                 localStorage.removeItem('talcoitn_admin_cardcolors');
                 localStorage.removeItem('talcoitn_admin_cardorder');
