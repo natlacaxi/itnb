@@ -126,6 +126,31 @@
             --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
         }
 
+        /* ---------- Mode dégradé (option "Dégradés" des paramètres) ---------- */
+        html.grad-mode .blob1,
+        html.grad-mode .blob2,
+        html.grad-mode .blob3 {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2), var(--accent-3)) !important;
+        }
+
+        html.grad-mode ::selection {
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+        }
+
+        /* ---------- Fond "Bulle" (option des paramètres) ---------- */
+        #bulleBg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            border: none;
+            pointer-events: none;
+            display: none;
+        }
+
+        #bulleBg.show {
+            display: block;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -2539,6 +2564,8 @@
         function itnAlert(message) { return itnModal(message, { cancelable: false }); }
     </script>
 
+    <iframe id="bulleBg" src="about:blank" title="Fond animé Bulle" tabindex="-1" aria-hidden="true"></iframe>
+
     <div id="ambient">
         <div class="blob blob1"></div>
         <div class="blob blob2"></div>
@@ -2557,7 +2584,7 @@
             </div>
             <h1 class="gate-logo">TalcoITN</h1>
             <div class="gate-sub">Talco IT Networks (ITN)</div>
-            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 78.2</div>
+            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 79.2</div>
         </div>
 
         <div class="gate-card glass">
@@ -2956,6 +2983,9 @@ button,input,textarea{font-family:var(--font);}
 }
 .status-dot.online{background:var(--a3);box-shadow:0 0 6px var(--a3);}
 .status-dot.offline{background:var(--muted);}
+.status-dot.presence-orange{background:#fb923c;box-shadow:0 0 6px #fb923c;}
+.status-dot.presence-green{background:#22c55e;box-shadow:0 0 6px #22c55e;}
+.status-dot.presence-red{background:#ef4444;box-shadow:0 0 4px #ef4444;}
 #me-info{flex:1;min-width:0;}
 #me-name{font-weight:700;font-size:14px;}
 #me-status-label{font-size:11px;color:var(--sub);}
@@ -3708,6 +3738,21 @@ const auth    = firebase.auth();
 const db      = firebase.firestore();
 const storage = firebase.storage();
 
+// Libellé de présence tricolore piloté par TalcoITN (orange = sur ITN,
+// vert = sur Exchange, rouge = a quitté ITN), avec repli sur l'ancien champ online.
+function presenceLabel(d){
+  if(d.presence === 'green') return '🟢 Sur Exchange';
+  if(d.presence === 'orange') return '🟠 Sur TalcoITN';
+  if(d.presence === 'red') return d.lastSeen ? '🔴 Vu '+relTime(d.lastSeen) : '🔴 Hors ligne';
+  return d.online ? '🟢 En ligne' : (d.lastSeen ? '⚫ Vu '+relTime(d.lastSeen) : '⚫ Hors ligne');
+}
+function presenceDotClass(d){
+  if(d.presence === 'green') return 'presence-green';
+  if(d.presence === 'orange') return 'presence-orange';
+  if(d.presence === 'red') return 'presence-red';
+  return d.online ? 'online' : 'offline';
+}
+
 /* =====================================================
    🔐 SSO AUTOMATIQUE depuis TalcoITN
    Lit itn_email / itn_pass / itn_auto dans l'URL (posés par
@@ -3887,9 +3932,9 @@ auth.onAuthStateChanged(async user=>{
         createdAt:firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
     }
-    // Mark online
-    db.collection('users').doc(user.uid).update({online:true,lastSeen:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
-    window.addEventListener('beforeunload',()=>{db.collection('users').doc(user.uid).update({online:false,lastSeen:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});});
+    // Mark online — la couleur de présence (orange/vert/rouge) est ensuite
+    // pilotée par le portail TalcoITN selon la navigation (voir setPresence côté ITN).
+    db.collection('users').doc(user.uid).update({online:true,presence:'green',lastSeen:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});
     $('login-screen').classList.add('hidden');
     $('app').classList.remove('hidden');
     $('me-name').textContent=myName;
@@ -3938,7 +3983,7 @@ async function fetchSuggestions(q){
     const item=document.createElement('div');
     item.className='sug-item';
     item.innerHTML=`<div class="av" style="width:28px;height:28px;font-size:11px;background:${avatarColor(d.username)};">${d.username[0].toUpperCase()}</div>
-      <div><div class="sug-name">${esc(d.username)}</div><div class="sug-handle">${d.online?'🟢 En ligne':'⚫ Hors ligne'}</div></div>`;
+      <div><div class="sug-name">${esc(d.username)}</div><div class="sug-handle">${presenceLabel(d)}</div></div>`;
     item.addEventListener('mousedown', e=>{
       e.preventDefault(); // empêche l'input de perdre le focus (blur) avant le clic
       hideSugg(); $('search-input').value=''; startDM(doc.id,d.username);
@@ -4438,14 +4483,8 @@ function watchOnlineStatus(uid){
     const d=doc.data();
     const sub=$('chat-sub-text');
     const dot=$('chat-status-dot');
-    if(d.online){
-      sub.textContent='Actif maintenant';
-      dot.className='status-dot online';
-    } else if(d.lastSeen){
-      const last=d.lastSeen.toDate();
-      sub.textContent='Vu '+relTime(d.lastSeen);
-      dot.className='status-dot offline';
-    }
+    sub.textContent=presenceLabel(d).replace(/^[^\s]+\s/, '');
+    dot.className='status-dot '+presenceDotClass(d);
   });
 }
 
@@ -4614,7 +4653,7 @@ async function openProfileModal(uid, fallbackName){
     if(!doc.exists) return;
     const d=doc.data();
     $('vp-name').textContent=d.username||fallbackName;
-    $('vp-status').textContent = d.online ? '🟢 En ligne' : (d.lastSeen ? 'Vu '+relTime(d.lastSeen) : '⚫ Hors ligne');
+    $('vp-status').textContent = presenceLabel(d);
     if(d.photoURL){
       av.style.backgroundImage=`url(${d.photoURL})`;
       av.style.backgroundSize='cover'; av.style.backgroundPosition='center';
@@ -17217,6 +17256,8 @@ window.addEventListener('load', () => {
             requestAnimationFrame(() => appEl.classList.add('show'));
             document.getElementById('userChip').textContent = (user.guest ? 'Invité' : (user.name || user.email)) + (user.isAdmin ? ' 👑' : '');
             logHistory(`Connexion (${user.guest ? 'invité' : (user.isAdmin ? 'admin' : 'compte')})`);
+            setPresence('orange');
+            window.addEventListener('beforeunload', () => setPresence('red'));
 
             if (user.guest) {
                 document.getElementById('guestBar').style.display = 'block';
@@ -17565,6 +17606,9 @@ window.addEventListener('load', () => {
         function initShell() {
             if (shellBuilt) return; shellBuilt = true;
 
+            applyGradMode(Store.get('talcoitn_gradmode', false));
+            applyBulle(Store.get('talcoitn_bulle', false));
+
             const menuEl = document.getElementById('mainmenu');
             MODULES.forEach(m => {
                 const b = document.createElement('button');
@@ -17609,10 +17653,12 @@ window.addEventListener('load', () => {
             const hv = document.getElementById('homeView');
             hv.style.display = 'block'; requestAnimationFrame(() => hv.classList.add('show'));
             document.querySelectorAll('.menu-item').forEach(b => b.classList.remove('active'));
+            setPresence('orange');
         }
 
         function openModule(id, sub) {
             const mod = MODULES.find(m => m.id === id); if (!mod) return;
+            setPresence(id === 'exchange' ? 'green' : 'orange');
             document.getElementById('homeView').classList.remove('show');
             setTimeout(() => { document.getElementById('homeView').style.display = 'none'; }, 200);
             document.getElementById('settingsPanel').classList.remove('show');
@@ -21049,10 +21095,45 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             { a1: '#ffb454', a2: '#ff5470', a3: '#6d5dfc' },
         ];
 
+        // ---------- Option "Dégradés" (paramètres > Apparence) ----------
+        function applyGradMode(on) {
+            document.documentElement.classList.toggle('grad-mode', !!on);
+        }
+
+        // ---------- Option "Bulle" — fond animé (paramètres > Apparence) ----------
+        // bulle.html doit être placé au même endroit que index.html (même dossier / hébergement).
+        function applyBulle(on) {
+            const frame = document.getElementById('bulleBg');
+            if (!frame) return;
+            if (on) {
+                if (frame.getAttribute('src') === 'about:blank' || !frame.getAttribute('src')) {
+                    frame.src = 'bulle.html';
+                }
+                frame.classList.add('show');
+            } else {
+                frame.classList.remove('show');
+            }
+        }
+
         function applyTheme(t) {
             document.documentElement.style.setProperty('--accent-1', t.a1);
             document.documentElement.style.setProperty('--accent-2', t.a2);
             document.documentElement.style.setProperty('--accent-3', t.a3);
+        }
+
+        // ---------- Présence en ligne (visible dans Exchange) ----------
+        // orange : présent sur TalcoITN (hors Exchange)
+        // vert   : ouvert sur le module Exchange
+        // rouge  : a quitté TalcoITN
+        function setPresence(color) {
+            try {
+                if (fbReady && db && currentUser && currentUser.uid && !currentUser.guest) {
+                    db.collection('users').doc(currentUser.uid).set({
+                        presence: color,
+                        presenceAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }).catch(() => {});
+                }
+            } catch (e) { /* silencieux — pas d'impact sur l'expérience si Firebase indisponible */ }
         }
 
         function openSettings() {
@@ -21063,6 +21144,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             const sp = document.getElementById('settingsPanel');
             sp.style.display = 'block'; requestAnimationFrame(() => sp.classList.add('show'));
             document.querySelectorAll('.menu-item').forEach(b => b.classList.toggle('active', b.dataset.id === 'settings'));
+            setPresence('orange');
         }
 
         function applyServerName(name) {
@@ -21076,6 +21158,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             const deep = Store.get('talcoitn_deepsearch', true);
             const dir = Store.get('talcoitn_splitdir', 'row');
             const notifOn = Store.get('talcoitn_notifon', true);
+            const gradMode = Store.get('talcoitn_gradmode', false);
+            const bulleOn = Store.get('talcoitn_bulle', false);
             const cardStyle = getCardStyle();
             const adminCardStyle = Store.get('talcoitn_admin_cardstyle', defaultCardStyle);
             panel.innerHTML = `
@@ -21090,6 +21174,8 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
       <div class="set-row"><span>Couleur d'accent 2</span><input type="color" id="setA2" value="${t.a2}"></div>
       <div class="set-row"><span>Couleur d'accent 3</span><input type="color" id="setA3" value="${t.a3}"></div>
       <div class="preset-row" id="presetRow"></div>
+      <div class="set-row"><span>Dégradés (fond, sélection…)</span><button class="set-btn" id="setGradToggle">${gradMode ? '✅ Activés' : '⭕ Désactivés'}</button></div>
+      <div class="set-row"><span>🫧 Bulle (fond animé)</span><button class="set-btn" id="setBulleToggle">${bulleOn ? '✅ Activée' : '⭕ Désactivée'}</button></div>
     </div>
     <div class="set-section glass">
       <div class="set-title">🎴 Personnalisation des cartes</div>
@@ -21257,6 +21343,14 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             });
             document.getElementById('setDirRow').addEventListener('click', () => { setSplitDirection('row'); renderSettings(); });
             document.getElementById('setDirCol').addEventListener('click', () => { setSplitDirection('column'); renderSettings(); });
+            document.getElementById('setGradToggle').addEventListener('click', () => {
+                const now = !gradMode; Store.set('talcoitn_gradmode', now); applyGradMode(now); renderSettings();
+                logHistory(`Dégradés : ${now ? 'activés' : 'désactivés'}`);
+            });
+            document.getElementById('setBulleToggle').addEventListener('click', () => {
+                const now = !bulleOn; Store.set('talcoitn_bulle', now); applyBulle(now); renderSettings();
+                logHistory(`Bulle (fond animé) : ${now ? 'activée' : 'désactivée'}`);
+            });
             document.getElementById('setNotifToggle').addEventListener('click', () => {
                 const now = !notifOn; Store.set('talcoitn_notifon', now); renderSettings();
                 logHistory(`Notifications : ${now ? 'activées' : 'désactivées'}`);
