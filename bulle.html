@@ -1,0 +1,97 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulle</title>
+    <style>
+        body,
+        html,
+        #app {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(0, 0, 0, 0.5) 200%);
+        }
+
+        #app {
+            position: relative;
+            height: 100%;
+            font-family: "Montserrat", serif;
+        }
+
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .buttons {
+            position: fixed;
+            width: 100%;
+            bottom: 15px;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        button,
+        a {
+            color: black;
+            font-family: "Montserrat", serif;
+            font-size: 12px;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+            border: 1px solid grey;
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="buttons">
+            <a href="https://www.framer.com/@kevin-levron/" target="_blank">Framer Component</a>
+        </div>
+        <canvas id="webgl-canvas"></canvas>
+    </div>
+
+    <script type="module">
+        // License: CC BY-NC-SA 4.0
+        // Attribution — You must give appropriate credit.
+        // Non-Commercial — You may not use the material for commercial purposes.
+
+        import Spheres1Background from 'https://cdn.jsdelivr.net/npm/threejs-components@0.0.17/build/backgrounds/spheres1.cdn.min.js';
+
+        const canvas = document.getElementById('webgl-canvas');
+        const bg = Spheres1Background(canvas, {
+            count: 300,
+            minSize: 0.3,
+            maxSize: 1,
+            gravity: 0.5
+        });
+
+        // Écoute les messages du portail TalcoITN (bulle activée/désactivée
+        // depuis les paramètres) pour ajuster gravité / couleurs à distance.
+        window.addEventListener('message', (ev) => {
+            const data = ev.data || {};
+            if (data.type === 'bulle-gravity') {
+                bg.spheres.config.gravity = data.value ? 1 : 0;
+            }
+            if (data.type === 'bulle-colors' && Array.isArray(data.colors)) {
+                bg.spheres.setColors(data.colors);
+            }
+        });
+    </script>
+</body>
+
+</html>
