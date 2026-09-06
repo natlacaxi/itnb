@@ -1824,6 +1824,12 @@
             border-color: rgba(255, 255, 255, .25);
         }
 
+        /* Sécurité : le sélecteur de module par fenêtre ne doit jamais apparaître
+           hors mode découpé (2/3 panes), quel que soit l'état JS. */
+        .mv-body:not(.split) .pane-modsel {
+            display: none !important;
+        }
+
         .pane-modsel option {
             background: #16161c;
             color: #e8e8f0;
