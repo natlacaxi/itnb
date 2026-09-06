@@ -2584,7 +2584,7 @@
             </div>
             <h1 class="gate-logo">TalcoITN</h1>
             <div class="gate-sub">Talco IT Networks (ITN)</div>
-            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 79.2</div>
+            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 80.1</div>
         </div>
 
         <div class="gate-card glass">
@@ -4089,8 +4089,16 @@ function openConv(convId, name, isGroup, otherUid){
   $('chat-title').style.cursor=isGroup?'default':'pointer';
   $('chat-avatar').childNodes[0].textContent=name[0].toUpperCase();
   paintAvatar($('chat-avatar'), name);
-  $('chat-status-dot').className=isGroup?'status-dot online':'status-dot online';
-  $('chat-sub-text').textContent=isGroup?'Groupe':'Actif maintenant';
+  if(isGroup){
+    if(unsubOnline){ unsubOnline(); unsubOnline=null; }
+    $('chat-status-dot').className='status-dot online';
+    $('chat-sub-text').textContent='Groupe';
+  } else if(otherUid){
+    watchOnlineStatus(otherUid);
+  } else {
+    $('chat-status-dot').className='status-dot offline';
+    $('chat-sub-text').textContent='';
+  }
   document.querySelectorAll('.conv-item').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.conv-item').forEach(el=>{if(el.dataset.name===name)el.classList.add('active');});
   listenMsgs(convId);
@@ -18327,7 +18335,7 @@ p{color:#8a8aa0;font-size:.82rem;padding:2rem;text-align:center;}
                 return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
 <style>*{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;background:#0a0a12;}iframe{width:100%;height:100%;border:none;display:block;}</style>
 </head><body>
-<iframe src="https://6s9h2o98sq2v69n2aq6sb2h69f4qa96v1b65f.netlify.app/" title="Intelligence" allow="clipboard-write; microphone"></iframe>
+<iframe src="https://natlacaxi.github.io/talco-ia2" title="Intelligence" allow="clipboard-write; microphone"></iframe>
 </body></html>`;
             }
 
@@ -21311,7 +21319,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
     </div>` : ''}
     <div class="set-section glass">
       <div class="set-title">Historique de personnalisation</div>
-      <div class="set-row"><span>Journal local (localStorage)</span><button class="set-btn danger" id="setClearHist">Vider</button></div>
+      <div class="set-row"><span>Journal local (localStorage)</span><span style="font-size:.65rem;color:var(--text-2);">🔒 Vidage désactivé</span></div>
       <div class="set-hist" id="histList"></div>
     </div>
   `;
@@ -21356,7 +21364,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 logHistory(`Notifications : ${now ? 'activées' : 'désactivées'}`);
             });
             document.getElementById('setLogout').addEventListener('click', () => { logHistory('Déconnexion'); location.reload(); });
-            document.getElementById('setClearHist').addEventListener('click', () => { Store.set('talcoitn_history', []); renderHistory(); });
+            // Le vidage de l'historique local a été désactivé volontairement (interdit).
 
             /* ---- Page de démarrage (démo) ---- */
             document.getElementById('setDemoToggle').addEventListener('click', () => {
