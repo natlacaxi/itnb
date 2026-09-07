@@ -18764,11 +18764,10 @@ kbd{padding:.1rem .28rem;border-radius:4px;background:rgba(255,255,255,.05);bord
 function safeAtob(s){
   try{s=s.replace(/%2F/g,'/').replace(/%2B/g,'+').replace(/%3D/g,'=').trim();while(s.length%4!==0)s+='=';return atob(s);}catch(e){return'';}
 }
-const PROXY_URL='https://talco-intelligence.natla-caxi.workers.dev';
+const PROXY_URL='https://talco-itn-ai.natla-caxi.workers.dev';
 const MODELS={
   openrouter:[
-    {id:'openai/gpt-4o-mini',label:'🟢 GPT-4o Mini'},
-    {id:'qwen/qwen-2.5-72b-instruct',label:'🔶 Qwen 2.5 72B'},
+    {id:'@cf/openai/gpt-oss-120b',label:'🟠 GPT-OSS 120B (Cloudflare)'},
   ]
 };
 let chatStarted=false,imgGenMode=false,pendingImg=null;
@@ -19007,11 +19006,11 @@ async function callOpenRouter(text,img,model){
     const res=await fetch(PROXY_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:model+':online',messages,temperature:0.9,max_tokens:4096})
+      body:JSON.stringify({model,messages,temperature:0.9,max_tokens:2048})
     });
     const data=await res.json();
-    if(data.error)throw new Error(data.error.message||'Erreur OpenRouter');
-    return data.choices?.[0]?.message?.content??'Pas de réponse.';
+    if(data.error)throw new Error(data.error.message||'Erreur Cloudflare AI');
+    return data.result?.response??data.choices?.[0]?.message?.content??'Pas de réponse.';
   }catch(e){
     throw new Error(\`Échec de l'appel au serveur proxy. \${e.message||''}\`);
   }
@@ -19045,8 +19044,8 @@ function typeText(el,text,i=0){
   }
 }
 const TAB_CONTENT={
-  1:\`<div class="modal-section"><h3>🤖 À propos</h3><p>Talco-Intelligence est un assistant IA multimodal connecté à OpenRouter (GPT-4o Mini, Qwen 2.5 72B) avec basculement automatique entre les clés.</p></div>
-<div class="modal-section"><h3>🔑 Clés API</h3><p>Les clés sont configurées et actives. Si l'une échoue, le système bascule automatiquement sur la suivante.</p></div>
+  1:\`<div class="modal-section"><h3>🤖 À propos</h3><p>Talco-Intelligence est un assistant IA multimodal connecté à Cloudflare Workers AI (Llama 3.3 70B), gratuit et sans clé API.</p></div>
+<div class="modal-section"><h3>🔑 Clés API</h3><p>Aucune clé API n'est nécessaire côté client : le Worker Cloudflare gère l'accès au modèle via son binding AI natif.</p></div>
 <div class="modal-section"><h3>🎨 Générer une image</h3><p>Active le bouton <strong>Générer image</strong>, décris ce que tu veux voir. Utilise Pollinations AI (gratuit).</p></div>
 <div class="modal-section"><h3>🔍 Analyser une image</h3><p>Clique sur <strong>Analyser image</strong> pour uploader une photo. Compatible avec les modèles multimodaux OpenRouter.</p></div>
 <div class="modal-section"><h3>📂 Historique</h3><p>Clique sur l'icône sidebar (en haut à gauche) pour accéder à tes conversations. Tout est sauvegardé dans ton navigateur.</p></div>\`,
@@ -19060,9 +19059,9 @@ function buildModelsTab(){
   const orOpts=MODELS.openrouter.map(m=>\`<option value="\${m.id}"\${activeModel===m.id?' selected':''}>\${m.label}</option>\`).join('');
   return\`<div class="modal-section"><h3>⚙️ Sélection du modèle actif</h3><p style="margin-bottom:.75rem">Choisis le provider et le modèle utilisé pour répondre. Le changement est immédiat.</p>
 <div class="model-api-grid">
-<div class="model-api-row"><span class="model-api-provider">🟠 OpenRouter</span><select class="model-api-select" id="modalOrSelect">\${orOpts}</select><button class="model-api-apply" onclick="applyModel('openrouter')">Utiliser</button><span class="model-active-badge">✓ actif</span></div>
+<div class="model-api-row"><span class="model-api-provider">🟠 Cloudflare AI</span><select class="model-api-select" id="modalOrSelect">\${orOpts}</select><button class="model-api-apply" onclick="applyModel('openrouter')">Utiliser</button><span class="model-active-badge">✓ actif</span></div>
 </div></div>
-<div class="modal-section"><h3>📌 Modèle actif</h3><div class="model-current-box"><p>Provider : <strong style="color:var(--blue)">🟠 OpenRouter</strong></p><p>Modèle : <strong style="color:var(--purp)">\${activeModel}</strong></p></div></div>\`;
+<div class="modal-section"><h3>📌 Modèle actif</h3><div class="model-current-box"><p>Provider : <strong style="color:var(--blue)">🟠 Cloudflare Workers AI</strong></p><p>Modèle : <strong style="color:var(--purp)">\${activeModel}</strong></p></div></div>\`;
 }
 function applyModel(provider){
   const sel=document.getElementById('modalOrSelect');
