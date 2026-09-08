@@ -23601,7 +23601,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 res.innerHTML = `<div class="sr-head"><span>${uniq.length} résultat${uniq.length > 1 ? 's' : ''}${deep ? ' · Entrée = ouvrir le 1er' : ''}</span><button id="srClose" title="Fermer">✕</button></div>`;
                 document.getElementById('srClose').addEventListener('click', closeResults);
                 if (uniq.length === 0) { res.insertAdjacentHTML('beforeend', '<div class="sr-item">Aucun résultat pour « ' + q + ' »</div>'); }
-                uniq.slice(0, 10).forEach(it => {
+                uniq.forEach(it => {
                     const d = document.createElement('div'); d.className = 'sr-item';
                     d.innerHTML = `<div class="sr-icon" style="background:${it.grad}">${it.icon}</div><div><div>${it.label}</div>${it.sub ? `<div style="font-size:.62rem;color:var(--text-2);margin-top:.15rem;">${it.sub}</div>` : ''}</div>`;
                     d.addEventListener('click', () => { it.action(); closeResults(); input.value = ''; });
