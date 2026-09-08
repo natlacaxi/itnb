@@ -2636,7 +2636,7 @@
             </div>
             <h1 class="gate-logo">TalcoITN</h1>
             <div class="gate-sub">Talco IT Networks (ITN)</div>
-            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 80.1</div>
+            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 93.2</div>
         </div>
 
         <div class="gate-card glass">
@@ -2838,7 +2838,9 @@
             <div class="search-mode-toggle" id="searchModeToggle">
                 <div class="smt-slider" id="smtSlider"></div>
                 <button class="smt-btn active" id="smtLocal" data-mode="local"
-                    title="Recherche interne à TalcoITN">Local</button>
+                    title="Recherche interne rapide (noms de modules)">Local</button>
+                <button class="smt-btn" id="smtAvance" data-mode="avance"
+                    title="Recherche dans le contenu des sites — Entrée ouvre direct le meilleur résultat">Avancé</button>
                 <button class="smt-btn" id="smtGoogle" data-mode="google" title="Recherche sur Google">Google</button>
             </div>
             <div id="searchResults"></div>
@@ -17038,8 +17040,10 @@ window.addEventListener('load', () => {
     <script>
         /* =====================================================================
            TALCOITN — version iOS moderne (glassmorphism + animations)
-           v90.1 — Enseignement 109 fusionné sur talcoexchange, toggle mode
-           actualité Intelligence (talco-itn-ai normal / talco-intelligence actu)
+           v93.2 — Enseignement 109 fusionné sur talcoexchange, toggle mode
+           actualité Intelligence (talco-itn-ai normal / talco-intelligence actu),
+           Scientis worker séparé (Groq + fallback Gemini, cache KV), règles
+           Firestore alignées sur le vrai schéma (sous-collections messages/posts)
            ===================================================================== */
 
         const firebaseConfig = {
@@ -23503,21 +23507,24 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             } catch (e) { return ''; }
         }
 
-        function deepSearchEnabled() { return Store.get('talcoitn_deepsearch', true); }
+        function deepSearchEnabled() { return searchMode === 'avance'; }
 
-        // ---------- Bascule de recherche Local / Google ----------
+        // ---------- Bascule de recherche Local / Avancé / Google ----------
         let searchMode = Store.get('talcoitn_searchmode', 'local');
         let pendingGoogleQuery = null; // lu une seule fois par starterContent(modId==='google') puis remis à null
         let pendingMapFocus = null; // {lat, lon, label} — lu une seule fois par starterContent(modId==='map'), posé par le bouton "Localisation de X" d'Exchange
 
         function setupSearchModeToggle() {
-            const btnLocal = document.getElementById('smtLocal'), btnGoogle = document.getElementById('smtGoogle');
+            const btnLocal = document.getElementById('smtLocal'), btnAvance = document.getElementById('smtAvance'), btnGoogle = document.getElementById('smtGoogle');
             const nav = document.getElementById('searchModeToggle'), slider = document.getElementById('smtSlider');
             function apply() {
                 btnLocal.classList.toggle('active', searchMode === 'local');
+                btnAvance.classList.toggle('active', searchMode === 'avance');
                 btnGoogle.classList.toggle('active', searchMode === 'google');
                 const input = document.getElementById('globalSearch');
-                input.placeholder = searchMode === 'google' ? 'Rechercher sur Google — Entrée pour lancer…' : 'Rechercher partout — modules, liens, contenu des sites…';
+                input.placeholder = searchMode === 'google' ? 'Rechercher sur Google — Entrée pour lancer…'
+                    : searchMode === 'avance' ? 'Recherche avancée — Entrée ouvre direct le meilleur résultat…'
+                    : 'Rechercher un module…';
                 const active = nav.querySelector('.smt-btn.active');
                 if (active) {
                     slider.style.opacity = '1';
@@ -23526,8 +23533,10 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                     slider.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
                 }
             }
-            btnLocal.addEventListener('click', () => { searchMode = 'local'; Store.set('talcoitn_searchmode', 'local'); apply(); document.getElementById('searchResults').style.display = 'none'; });
-            btnGoogle.addEventListener('click', () => { searchMode = 'google'; Store.set('talcoitn_searchmode', 'google'); apply(); document.getElementById('searchResults').style.display = 'none'; document.getElementById('globalSearch').focus(); });
+            function switchTo(mode) { searchMode = mode; Store.set('talcoitn_searchmode', mode); apply(); document.getElementById('searchResults').style.display = 'none'; }
+            btnLocal.addEventListener('click', () => switchTo('local'));
+            btnAvance.addEventListener('click', () => { switchTo('avance'); document.getElementById('globalSearch').focus(); });
+            btnGoogle.addEventListener('click', () => { switchTo('google'); document.getElementById('globalSearch').focus(); });
             setupLiquidMenu(nav, slider, '.smt-btn', item => item.click());
             requestAnimationFrame(apply);
             window.addEventListener('resize', apply);
@@ -23535,20 +23544,9 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
 
         function setupSearch() {
             const input = document.getElementById('globalSearch'), res = document.getElementById('searchResults');
+            let lastTopResult = null; // meilleur résultat courant, pour ouverture directe en mode Avancé
             function closeResults() { res.style.display = 'none'; }
-            input.addEventListener('keydown', ev => {
-                if (ev.key === 'Enter' && searchMode === 'google') {
-                    const q = input.value.trim();
-                    if (!q) return;
-                    pendingGoogleQuery = q;
-                    openModule('google');
-                    closeResults();
-                }
-            });
-            input.addEventListener('input', () => {
-                if (searchMode === 'google') return; // en mode Google, seul Entrée déclenche — pas de suggestions locales
-                const q = input.value.trim().toLowerCase();
-                if (!q) { res.style.display = 'none'; return; }
+            function computeResults(q) {
                 const terms = q.split(/\s+/).filter(Boolean);
                 const items = [];
                 const deep = deepSearchEnabled();
@@ -23574,11 +23572,33 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                     }
                 });
 
-                // dédoublonnage
                 const seen = new Set();
-                const uniq = items.filter(it => { if (seen.has(it.label)) return false; seen.add(it.label); return true; });
+                return items.filter(it => { if (seen.has(it.label)) return false; seen.add(it.label); return true; });
+            }
+            input.addEventListener('keydown', ev => {
+                if (ev.key !== 'Enter') return;
+                if (searchMode === 'google') {
+                    const q = input.value.trim();
+                    if (!q) return;
+                    pendingGoogleQuery = q;
+                    openModule('google');
+                    closeResults();
+                } else if (searchMode === 'avance' && lastTopResult) {
+                    // Ouverture directe du meilleur résultat, sans passer par la liste
+                    lastTopResult.action();
+                    closeResults();
+                    input.value = '';
+                }
+            });
+            input.addEventListener('input', () => {
+                if (searchMode === 'google') return; // en mode Google, seul Entrée déclenche — pas de suggestions locales
+                const q = input.value.trim().toLowerCase();
+                if (!q) { res.style.display = 'none'; lastTopResult = null; return; }
+                const uniq = computeResults(q);
+                lastTopResult = uniq[0] || null;
+                const deep = searchMode === 'avance';
 
-                res.innerHTML = `<div class="sr-head"><span>${uniq.length} résultat${uniq.length > 1 ? 's' : ''}${deep ? ' · recherche approfondie' : ''}</span><button id="srClose" title="Fermer">✕</button></div>`;
+                res.innerHTML = `<div class="sr-head"><span>${uniq.length} résultat${uniq.length > 1 ? 's' : ''}${deep ? ' · Entrée = ouvrir le 1er' : ''}</span><button id="srClose" title="Fermer">✕</button></div>`;
                 document.getElementById('srClose').addEventListener('click', closeResults);
                 if (uniq.length === 0) { res.insertAdjacentHTML('beforeend', '<div class="sr-item">Aucun résultat pour « ' + q + ' »</div>'); }
                 uniq.slice(0, 10).forEach(it => {
@@ -23663,7 +23683,6 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
             const panel = document.getElementById('settingsPanel');
             const t = Store.get('talcoitn_theme', defaultTheme);
             const serverName = Store.get('talcoitn_servername', 'Administration TalcoIT-Networks');
-            const deep = Store.get('talcoitn_deepsearch', true);
             const dir = Store.get('talcoitn_splitdir', 'row');
             const notifOn = Store.get('talcoitn_notifon', true);
             const gradMode = Store.get('talcoitn_gradmode', false);
@@ -23704,9 +23723,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
     </div>
     <div class="set-section glass">
       <div class="set-title">Recherche</div>
-      <div class="set-row"><span>Recherche approfondie (lit le contenu des sites)</span>
-        <button class="set-btn" id="setDeepSearch">${deep ? '✅ Activée' : '⭕ Désactivée'}</button>
-      </div>
+      <div class="set-row"><span>Le mode "Avancé" (bascule Local/Avancé/Google au-dessus de la barre de recherche) active la lecture du contenu des sites, avec ouverture directe du meilleur résultat sur Entrée.</span></div>
     </div>
     <div class="set-section glass">
       <div class="set-title">Découpage des fenêtres</div>
@@ -23844,10 +23861,6 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                 const v = e.target.value.trim() || 'Administration TalcoIT-Networks';
                 Store.set('talcoitn_servername', v); applyServerName(v);
                 logHistory(`Nom du serveur modifié : ${v}`);
-            });
-            document.getElementById('setDeepSearch').addEventListener('click', () => {
-                const now = !deep; Store.set('talcoitn_deepsearch', now); renderSettings();
-                logHistory(`Recherche approfondie : ${now ? 'activée' : 'désactivée'}`);
             });
             document.getElementById('setDirRow').addEventListener('click', () => { setSplitDirection('row'); renderSettings(); });
             document.getElementById('setDirCol').addEventListener('click', () => { setSplitDirection('column'); renderSettings(); });
