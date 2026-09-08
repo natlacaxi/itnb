@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -2495,35 +2493,88 @@
 
     <style>
         #itnModalOverlay {
-            position: fixed; inset: 0; z-index: 99999;
-            background: rgba(5,3,10,0.55);
-            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-            display: none; align-items: center; justify-content: center;
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: rgba(5, 3, 10, 0.55);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
         }
-        #itnModalOverlay.show { display: flex; }
+
+        #itnModalOverlay.show {
+            display: flex;
+        }
+
         #itnModalBox {
-            width: 100%; max-width: 340px;
-            background: linear-gradient(160deg, rgba(24,20,38,0.98), rgba(14,12,22,0.98));
-            border: 1px solid rgba(255,255,255,0.14);
+            width: 100%;
+            max-width: 340px;
+            background: linear-gradient(160deg, rgba(24, 20, 38, 0.98), rgba(14, 12, 22, 0.98));
+            border: 1px solid rgba(255, 255, 255, 0.14);
             border-radius: 22px;
             padding: 22px 20px 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.08);
-            transform: scale(.92); opacity: 0; transition: transform .18s ease, opacity .18s ease;
-            font-family: 'Sora','Inter',sans-serif;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            transform: scale(.92);
+            opacity: 0;
+            transition: transform .18s ease, opacity .18s ease;
+            font-family: 'Sora', 'Inter', sans-serif;
         }
-        #itnModalOverlay.show #itnModalBox { transform: scale(1); opacity: 1; }
-        #itnModalMsg { color: #f1f0f7; font-size: .92rem; line-height: 1.45; white-space: pre-line; margin-bottom: 18px; text-align: center; }
-        #itnModalBtns { display: flex; gap: 10px; }
+
+        #itnModalOverlay.show #itnModalBox {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        #itnModalMsg {
+            color: #f1f0f7;
+            font-size: .92rem;
+            line-height: 1.45;
+            white-space: pre-line;
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        #itnModalBtns {
+            display: flex;
+            gap: 10px;
+        }
+
         #itnModalBtns button {
-            flex: 1; border: none; cursor: pointer; padding: 11px 0; border-radius: 14px;
-            font-size: .86rem; font-weight: 600; font-family: inherit; transition: filter .15s, transform .1s;
+            flex: 1;
+            border: none;
+            cursor: pointer;
+            padding: 11px 0;
+            border-radius: 14px;
+            font-size: .86rem;
+            font-weight: 600;
+            font-family: inherit;
+            transition: filter .15s, transform .1s;
         }
-        #itnModalBtns button:active { transform: scale(.96); }
-        #itnModalCancel { background: rgba(255,255,255,0.08); color: #cfcfe0; }
-        #itnModalCancel:hover { filter: brightness(1.3); }
-        #itnModalOk { background: linear-gradient(135deg,#7c5cff,#ff5fa8); color: #fff; }
-        #itnModalOk:hover { filter: brightness(1.1); }
+
+        #itnModalBtns button:active {
+            transform: scale(.96);
+        }
+
+        #itnModalCancel {
+            background: rgba(255, 255, 255, 0.08);
+            color: #cfcfe0;
+        }
+
+        #itnModalCancel:hover {
+            filter: brightness(1.3);
+        }
+
+        #itnModalOk {
+            background: linear-gradient(135deg, #7c5cff, #ff5fa8);
+            color: #fff;
+        }
+
+        #itnModalOk:hover {
+            filter: brightness(1.1);
+        }
     </style>
     <div id="itnModalOverlay">
         <div id="itnModalBox">
@@ -16987,6 +17038,8 @@ window.addEventListener('load', () => {
     <script>
         /* =====================================================================
            TALCOITN — version iOS moderne (glassmorphism + animations)
+           v90.1 — Enseignement 109 fusionné sur talcoexchange, toggle mode
+           actualité Intelligence (talco-itn-ai normal / talco-intelligence actu)
            ===================================================================== */
 
         const firebaseConfig = {
@@ -18765,6 +18818,16 @@ function safeAtob(s){
   try{s=s.replace(/%2F/g,'/').replace(/%2B/g,'+').replace(/%3D/g,'=').trim();while(s.length%4!==0)s+='=';return atob(s);}catch(e){return'';}
 }
 const PROXY_URL='https://talco-itn-ai.natla-caxi.workers.dev';
+const NEWS_PROXY_URL='https://talco-intelligence.natla-caxi.workers.dev';
+const NEWS_MODEL='openai/gpt-oss-120b'; // ID valide côté OpenRouter (sans le préfixe @cf/, réservé à Cloudflare Workers AI)
+let newsMode=(localStorage.getItem('talco_news_mode')==='1');
+function getActiveProxyUrl(){return newsMode?NEWS_PROXY_URL:PROXY_URL;}
+function toggleNewsMode(){
+  newsMode=!newsMode;
+  localStorage.setItem('talco_news_mode',newsMode?'1':'0');
+  setApiStatus('ok',(newsMode?'📰 Mode actualité':getModel().split('/').pop().substring(0,24)));
+  document.getElementById('tabContent').innerHTML=buildModelsTab();
+}
 const MODELS={
   openrouter:[
     {id:'@cf/openai/gpt-oss-120b',label:'🟠 GPT-OSS 120B (Cloudflare)'},
@@ -19003,14 +19066,17 @@ async function callOpenRouter(text,img,model){
   history.forEach(m=>{messages.push({role:m.role==='ai'?'assistant':'user',content:m.text||''});});
   messages.push({role:'user',content:img?userContent:(text||'')});
   try{
-    const res=await fetch(PROXY_URL,{
+    const res=await fetch(getActiveProxyUrl(),{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model,messages,temperature:0.9,max_tokens:2048})
+      body:JSON.stringify({model:newsMode?NEWS_MODEL:model,messages,temperature:0.9,max_tokens:2048})
     });
     const data=await res.json();
-    if(data.error)throw new Error(data.error.message||'Erreur Cloudflare AI');
-    return data.result?.response??data.choices?.[0]?.message?.content??'Pas de réponse.';
+    if(data.error)throw new Error(data.error.message||data.error||'Erreur API');
+    // Deux formats possibles selon le Worker actif :
+    // - talco-intelligence (OpenRouter) : {choices:[{message:{content}}]}
+    // - talco-itn-ai (Workers AI brut)  : {response:"..."} directement à la racine
+    return data.choices?.[0]?.message?.content ?? data.response ?? data.result?.response ?? 'Pas de réponse.';
   }catch(e){
     throw new Error(\`Échec de l'appel au serveur proxy. \${e.message||''}\`);
   }
@@ -19061,7 +19127,13 @@ function buildModelsTab(){
 <div class="model-api-grid">
 <div class="model-api-row"><span class="model-api-provider">🟠 Cloudflare AI</span><select class="model-api-select" id="modalOrSelect">\${orOpts}</select><button class="model-api-apply" onclick="applyModel('openrouter')">Utiliser</button><span class="model-active-badge">✓ actif</span></div>
 </div></div>
-<div class="modal-section"><h3>📌 Modèle actif</h3><div class="model-current-box"><p>Provider : <strong style="color:var(--blue)">🟠 Cloudflare Workers AI</strong></p><p>Modèle : <strong style="color:var(--purp)">\${activeModel}</strong></p></div></div>\`;
+<div class="modal-section"><h3>📰 Mode actualité</h3><p style="margin-bottom:.6rem">Bascule vers le Worker dédié aux réponses avec actualités récentes (talco-intelligence).</p>
+<label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;">
+  <input type="checkbox" id="newsModeToggle" \${newsMode?'checked':''} onchange="toggleNewsMode()" style="width:38px;height:20px;accent-color:var(--purp,#6d5dfc);cursor:pointer;">
+  <span style="font-size:.82rem;color:#c9c9e0;">\${newsMode?'Activé — réponses via talco-intelligence':'Désactivé — réponses via talco-itn-ai (normal)'}</span>
+</label>
+</div>
+<div class="modal-section"><h3>📌 Modèle actif</h3><div class="model-current-box"><p>Provider : <strong style="color:var(--blue)">🟠 Cloudflare Workers AI</strong></p><p>Modèle : <strong style="color:var(--purp)">\${activeModel}</strong></p><p>Worker : <strong style="color:var(--purp)">\${newsMode?'talco-intelligence (actualité)':'talco-itn-ai (normal)'}</strong></p></div></div>\`;
 }
 function applyModel(provider){
   const sel=document.getElementById('modalOrSelect');
@@ -21493,18 +21565,18 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
 <script>
   const isAdmin = ${isAdminUser109 ? 'true' : 'false'};
 
-  // Projet Firebase dédié à Enseignement (règles ouvertes — voir message ; le
-  // contrôle admin se fait côté client comme pour le reste du site).
+  // Fusionné sur le projet Firebase principal talcoexchange (au lieu d'un
+  // projet séparé) — collection dédiée "matieres109" pour ne pas entrer en
+  // conflit avec les autres modules du site.
   const firebaseConfig = {
-    apiKey: "AIzaSyDnLgFD3135InWkIUrzKhM1FInEoeaq34w",
-    authDomain: "enseignement---community.firebaseapp.com",
-    databaseURL: "https://enseignement---community-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "enseignement---community",
-    storageBucket: "enseignement---community.firebasestorage.app",
-    messagingSenderId: "458371546827",
-    appId: "1:458371546827:web:2f838f15aec8964707e54e"
+    apiKey: "AIzaSyBHPIvhPl_9WqergwOuQMy2GwTFOmpEa8Y",
+    authDomain: "talcoexchange.firebaseapp.com",
+    projectId: "talcoexchange",
+    storageBucket: "talcoexchange.appspot.com",
+    messagingSenderId: "1031865188092",
+    appId: "1:1031865188092:web:8292700b9aa8a73ea76179"
   };
-  firebase.initializeApp(firebaseConfig);
+  try { firebase.initializeApp(firebaseConfig); } catch (e) { /* déjà initialisé */ }
   const db = firebase.firestore();
   const matieresRef = db.collection('matieres109');
 
@@ -23567,7 +23639,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
                     db.collection('users').doc(currentUser.uid).set({
                         presence: color,
                         presenceAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true }).catch(() => {});
+                    }, { merge: true }).catch(() => { });
                 }
             } catch (e) { /* silencieux — pas d'impact sur l'expérience si Firebase indisponible */ }
         }
