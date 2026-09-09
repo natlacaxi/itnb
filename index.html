@@ -2637,7 +2637,7 @@
             </div>
             <h1 class="gate-logo">TalcoITN</h1>
             <div class="gate-sub">Talco IT Networks (ITN)</div>
-            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 93.2</div>
+            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 101.3</div>
         </div>
 
         <div class="gate-card glass">
@@ -19973,6 +19973,9 @@ footer b{color:var(--phosphor);}
   <div class="formula-cat-title">🌀 Mécanique des fluides</div>
   <div class="formula-grid" id="grid-fluides"></div>
 
+  <div class="formula-cat-title">🎓 Lycée — 1ère & Terminale spé physique-chimie</div>
+  <div class="formula-grid" id="grid-lycee"></div>
+
   <button class="ai-ask-btn" onclick="askAIAbout('formules')"><span class="spark">✨</span>Demander à Convert'AI d'expliquer une formule</button>
 </section>
 </div>
@@ -20793,12 +20796,49 @@ const FORMULAS = [
     compute:(v)=> -(0.5*v.rho*v.v*v.v + v.rho*G_EARTH*v.h), resultLabel:'P relatif (Pa)'},
   { cat:'fluides', id:'reynolds', eq:'Re = ρ × v × L / μ', name:'Nombre de Reynolds', desc:"Nombre sans dimension indiquant si un écoulement est laminaire (Re<2000) ou turbulent (Re>4000).",
     vars:[{k:'rho',label:'Masse volumique ρ (kg/m³)'},{k:'v',label:'Vitesse v (m/s)'},{k:'L',label:'Longueur caractéristique L (m)'},{k:'mu',label:'Viscosité dynamique μ (Pa·s)'}],
-    compute:(v)=> (v.rho*v.v*v.L)/v.mu, resultLabel:'Re (sans unité)'}
+    compute:(v)=> (v.rho*v.v*v.L)/v.mu, resultLabel:'Re (sans unité)'},
+
+  { cat:'lycee', id:'chutelibre', eq:'h = ½ × g × t²', name:'Chute libre (sans vitesse initiale)', desc:"Programme 1ère spé — distance parcourue en chute libre depuis le repos, sous la seule gravité (g = 9,80665 m/s²).",
+    vars:[{k:'t',label:'Durée de chute t (s)'}],
+    compute:(v)=> 0.5*G_EARTH*v.t*v.t, resultLabel:'h (m)'},
+  { cat:'lycee', id:'emeca', eq:'Em = Ec + Ep', name:'Énergie mécanique', desc:"Programme Terminale — somme de l'énergie cinétique et de l'énergie potentielle ; se conserve en l'absence de frottement.",
+    vars:[{k:'Ec',label:'Énergie cinétique Ec (J)'},{k:'Ep',label:'Énergie potentielle Ep (J)'}],
+    compute:(v)=> v.Ec+v.Ep, resultLabel:'Em (J)'},
+  { cat:'lycee', id:'rendement', eq:'η = Putile / Ptotale × 100', name:'Rendement énergétique', desc:"Programme Terminale — proportion de la puissance/énergie fournie qui est effectivement utilisée (transferts et conversions d'énergie).",
+    vars:[{k:'Pu',label:'Puissance utile Putile (W)'},{k:'Pt',label:'Puissance totale Ptotale (W)'}],
+    compute:(v)=> (v.Pu/v.Pt)*100, resultLabel:'η (%)'},
+  { cat:'lycee', id:'constRC', eq:'τ = R × C', name:'Constante de temps d\\'un dipôle RC', desc:"Programme Terminale (temps, mouvement et évolution des systèmes) — durée caractéristique de charge/décharge d'un condensateur à travers une résistance.",
+    vars:[{k:'R',label:'Résistance R (Ω)'},{k:'C',label:'Capacité C (F)'}],
+    compute:(v)=> v.R*v.C, resultLabel:'τ (s)'},
+  { cat:'lycee', id:'chargecond', eq:'Q = C × U', name:'Charge d\\'un condensateur', desc:"Programme Terminale — charge électrique stockée par un condensateur de capacité C soumis à une tension U.",
+    vars:[{k:'C',label:'Capacité C (F)'},{k:'U',label:'Tension U (V)'}],
+    compute:(v)=> v.C*v.U, resultLabel:'Q (C)'},
+  { cat:'lycee', id:'decroissancerad', eq:'N = N0 × e^(−λt)', name:'Décroissance radioactive', desc:"Programme Terminale — nombre de noyaux radioactifs restants au temps t, à partir du nombre initial N0 et de la constante radioactive λ.",
+    vars:[{k:'N0',label:'Nombre initial de noyaux N0'},{k:'lambda',label:'Constante radioactive λ (s⁻¹)'},{k:'t',label:'Temps écoulé t (s)'}],
+    compute:(v)=> v.N0*Math.exp(-v.lambda*v.t), resultLabel:'N (noyaux)'},
+  { cat:'lycee', id:'demivie', eq:'t½ = ln(2) / λ', name:'Demi-vie radioactive', desc:"Programme Terminale — durée au bout de laquelle la moitié des noyaux radioactifs initiaux se sont désintégrés.",
+    vars:[{k:'lambda',label:'Constante radioactive λ (s⁻¹)'}],
+    compute:(v)=> Math.log(2)/v.lambda, resultLabel:'t½ (s)'},
+  { cat:'lycee', id:'coulomb', eq:'F = k × |q1×q2| / r²', name:'Loi de Coulomb', desc:"Programme Terminale (ondes et signaux / interactions) — force électrostatique entre deux charges ponctuelles (k = 8,99×10⁹ N·m²/C²).",
+    vars:[{k:'q1',label:'Charge q1 (C)'},{k:'q2',label:'Charge q2 (C)'},{k:'r',label:'Distance r (m)'}],
+    compute:(v)=> (8.99e9*Math.abs(v.q1*v.q2))/(v.r*v.r), resultLabel:'F (N)'},
+  { cat:'lycee', id:'champelec', eq:'E = U / d', name:'Champ électrique (condensateur plan)', desc:"Programme Terminale — champ électrique uniforme entre deux plaques planes séparées par une distance d, soumises à une tension U.",
+    vars:[{k:'U',label:'Tension U (V)'},{k:'d',label:'Distance entre plaques d (m)'}],
+    compute:(v)=> v.U/v.d, resultLabel:'E (V/m)'},
+  { cat:'lycee', id:'premierprincipe', eq:'ΔU = W + Q', name:'Premier principe de la thermodynamique', desc:"Programme Terminale — la variation d'énergie interne d'un système est la somme du travail et du transfert thermique reçus.",
+    vars:[{k:'W',label:'Travail reçu W (J)'},{k:'Q',label:'Transfert thermique reçu Q (J)'}],
+    compute:(v)=> v.W+v.Q, resultLabel:'ΔU (J)'},
+  { cat:'lycee', id:'titrage', eq:'C1 × V1 = C2 × V2 (équivalence) → C2', name:'Titrage à l\\'équivalence', desc:"Programme 1ère/Terminale (chimie) — détermine la concentration inconnue d'une espèce à partir du volume versé à l'équivalence.",
+    vars:[{k:'C1',label:'Concentration réactif titrant C1 (mol/L)'},{k:'V1',label:'Volume versé à l\\'équivalence V1 (L)'},{k:'V2',label:'Volume de solution titrée V2 (L)'}],
+    compute:(v)=> (v.C1*v.V1)/v.V2, resultLabel:'C2 (mol/L)'},
+  { cat:'lycee', id:'dopplerlum', eq:'Δλ/λ = v / c', name:'Effet Doppler (lumière)', desc:"Programme Terminale (ondes et signaux) — décalage relatif de longueur d'onde perçu pour une source lumineuse en mouvement à la vitesse v.",
+    vars:[{k:'dlambda',label:'Décalage Δλ (m)'},{k:'lambda',label:'Longueur d\\'onde λ (m)'}],
+    compute:(v)=> (v.dlambda/v.lambda)*C_LIGHT, resultLabel:'v (m/s)'}
 ];
 
 function buildFormulaCards(){
   const grids = { meca:document.getElementById('grid-meca'), elec:document.getElementById('grid-elec'), energie:document.getElementById('grid-energie'), ondes:document.getElementById('grid-ondes'),
-    chimie:document.getElementById('grid-chimie'), astro:document.getElementById('grid-astro'), info:document.getElementById('grid-info'), fluides:document.getElementById('grid-fluides') };
+    chimie:document.getElementById('grid-chimie'), astro:document.getElementById('grid-astro'), info:document.getElementById('grid-info'), fluides:document.getElementById('grid-fluides'), lycee:document.getElementById('grid-lycee') };
   FORMULAS.forEach(f=>{
     const card = document.createElement('div');
     card.className = 'formula-card';
@@ -20997,7 +21037,9 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
   *{margin:0;padding:0;box-sizing:border-box;}
   html,body{height:100%;background:#08080d;font-family:'Inter',-apple-system,sans-serif;color:#f2f2f7;overflow:hidden;}
   .g-wrap{display:flex;flex-direction:column;height:100%;}
-  .g-top{flex:0 0 auto;padding:.9rem 1rem .7rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.08);}
+  .g-top{flex:0 0 auto;padding:.9rem 1rem .7rem;display:grid;grid-template-columns:1fr minmax(0,560px) 1fr;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.08);}
+  .g-logo{justify-self:start;}
+  .g-newtab{justify-self:end;}
   .g-logo{font-family:'Sora',-apple-system,sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.02em;flex:0 0 auto;
     background:linear-gradient(90deg,#4f7cff,#ff5fa8,#ffc247,#4f7cff);background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
     animation:shine 6s linear infinite;}
@@ -21012,9 +21054,16 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
   .g-newtab{flex:0 0 auto;color:#8db2ff;font-size:.7rem;text-decoration:none;white-space:nowrap;padding:.4rem .2rem;}
   .g-frame-wrap{flex:1 1 auto;position:relative;min-height:0;}
   .g-frame-wrap iframe{width:100%;height:100%;border:none;display:block;background:#fff;}
-  .g-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#67677a;font-size:.8rem;padding:2rem;flex-direction:column;gap:.6rem;}
+  .g-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#67677a;font-size:.8rem;padding:2rem;flex-direction:column;gap:.6rem;background:#08080d;z-index:2;}
   .g-empty a{color:#8db2ff;}
+  .g-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#08080d;z-index:3;flex-direction:column;gap:.7rem;}
+  .g-loading.show{display:flex;}
+  .g-spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#4f7cff;animation:gspin .7s linear infinite;}
+  @keyframes gspin{to{transform:rotate(360deg);}}
+  .g-loading span{font-size:.72rem;color:#67677a;}
 </style>
+<link rel="preconnect" href="https://www.google.com">
+<link rel="dns-prefetch" href="https://www.google.com">
 </head>
 <body>
 <div class="g-wrap">
@@ -21029,6 +21078,7 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
   </div>
   <div class="g-frame-wrap" id="gFrameWrap">
     <div class="g-empty" id="gEmpty">Tape une recherche ci-dessus.</div>
+    <div class="g-loading" id="gLoading"><div class="g-spinner"></div><span>Chargement des résultats…</span></div>
   </div>
 </div>
 
@@ -21037,23 +21087,49 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
   const input = document.getElementById('gInput');
   const frameWrap = document.getElementById('gFrameWrap');
   const newTabLink = document.getElementById('gNewTab');
+  const loadingEl = document.getElementById('gLoading');
+  const emptyEl = document.getElementById('gEmpty');
+  // Évite la mise en abîme : si un résultat Google renvoie vers le portail
+  // ITN lui-même, on bloque net plutôt que de le laisser se recharger dans
+  // le cadre (natlacaxi.github.io héberge plusieurs projets sur la même
+  // origine — /itnb/ y compris — donc on peut lire l'URL une fois chargée).
+  const BLOCKED_HOST_PATH = 'natlacaxi.github.io/itnb';
   let frame = null;
 
   // igu=1 : paramètre officiel de Google pour rendre la page de résultats
   // embarquable dans un <iframe> (contourne X-Frame-Options sur cette page
   // précise). igu = "iframe Google usage".
-  function googleUrl(q){ return 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(q); }
+  // ⚠️ Remplace par l'URL de ton Worker Cloudflare une fois déployé (voir
+  // talco-search-proxy.js). Le Worker sert la page Google depuis SON propre
+  // domaine : plus de X-Frame-Options bloquant, login Google retiré, thème
+  // sombre injecté.
+  const SEARCH_PROXY_URL = 'https://talco-search-proxy.ota-claudeai.workers.dev';
+  function googleUrl(q){ return SEARCH_PROXY_URL + '?q=' + encodeURIComponent(q); }
+
+  function checkForRecursion(){
+    try{
+      const href = frame.contentWindow.location.href;
+      if(href && href.indexOf(BLOCKED_HOST_PATH) !== -1){
+        frame.src = 'about:blank';
+        loadingEl.classList.remove('show');
+        emptyEl.style.display = 'flex';
+        emptyEl.textContent = 'Page bloquée : ce lien rouvrait TalcoITN dans lui-même (mise en abîme).';
+      }
+    }catch(e){ /* cross-origin (résultat externe normal) : rien à faire */ }
+  }
 
   function runSearch(q){
     q = (q||'').trim();
     if(!q) return;
     const url = googleUrl(q);
     newTabLink.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+    emptyEl.style.display = 'none';
+    loadingEl.classList.add('show');
     if(!frame){
-      frameWrap.innerHTML = '';
       frame = document.createElement('iframe');
       frame.title = 'Résultats Google';
       frame.referrerPolicy = 'no-referrer-when-downgrade';
+      frame.addEventListener('load', ()=>{ loadingEl.classList.remove('show'); checkForRecursion(); });
       frameWrap.appendChild(frame);
     }
     frame.src = url;
@@ -23416,7 +23492,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
         function buildExecSquare(modId, sub, grad, icon, name) {
             const square = document.createElement('div'); square.className = 'exec-square';
             let content;
-            if (modId === 'exchange' || (modId === 'pratics' && sub !== 'Heures' && sub !== 'HTML 1' && sub !== 'HTML 2' && sub !== 'Bac à sable') || modId === 'enseignement' || modId === 'google' || modId === 'map' || modId === 'favoris' || modId === 'settings' || (modId === 'cloud' && (sub === 'Personnal' || sub === 'Community' || sub === 'Liens Nexus')) || (modId === 'music' && (sub === 'Cosmic' || sub === 'Blind-test' || sub === 'DJ'))) {
+            if (modId === 'exchange' || (modId === 'pratics' && sub !== 'Heures' && sub !== 'HTML 1' && sub !== 'HTML 2' && sub !== 'Bac à sable') || modId === 'enseignement' || modId === 'google' || modId === 'map' || modId === 'favoris' || modId === 'settings' || modId === 'intelligence' || modId === 'scientis' || (modId === 'cloud' && (sub === 'Personnal' || sub === 'Community' || sub === 'Liens Nexus')) || (modId === 'music' && (sub === 'Cosmic' || sub === 'Blind-test' || sub === 'DJ'))) {
                 content = starterContent(modId, sub, grad, icon, name || modId);
             } else {
                 content = Store.get(execKey(modId, sub), null);
