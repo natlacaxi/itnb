@@ -2586,6 +2586,48 @@
             </div>
         </div>
     </div>
+
+    <div id="adminContactOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+        <div style="background:#15121f;border:1px solid rgba(255,255,255,.1);border-radius:18px;max-width:420px;width:90%;padding:1.5rem;color:#fff;font-family:inherit;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+            <h3 style="margin:0 0 .6rem;font-size:1.1rem;">📧 Contacter l'administration</h3>
+            <p style="opacity:.75;font-size:.85rem;line-height:1.5;margin:0 0 1rem;">Le mode invité est désactivé. Pour obtenir un code d'accès, envoie un mail à <b>talcoitn@gmail.com</b>, ou clique sur le bouton ci-dessous pour ouvrir ta messagerie avec le message déjà prêt.</p>
+            <div style="background:rgba(255,255,255,.05);border-radius:10px;padding:.7rem .9rem;font-size:.8rem;opacity:.85;margin-bottom:1rem;white-space:pre-wrap;max-height:160px;overflow:auto;" id="adminContactPreview"></div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+                <a id="adminContactMailBtn" href="#" style="flex:1;text-align:center;text-decoration:none;background:linear-gradient(135deg,#7c5cff,#ff5fa8);color:#fff;padding:.6rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;">Ouvrir ma messagerie</a>
+                <button id="adminContactCopyBtn" type="button" style="flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:.6rem 1rem;border-radius:10px;font-size:.85rem;cursor:pointer;">Copier l'adresse</button>
+            </div>
+            <button id="adminContactCloseBtn" type="button" style="margin-top:.8rem;width:100%;background:none;border:none;color:rgba(255,255,255,.5);font-size:.8rem;cursor:pointer;padding:.4rem;">Fermer</button>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const ADMIN_EMAIL = 'talcoitn@gmail.com';
+            const ADMIN_SUBJECT = "Demande de code d'accès TalcoITN";
+            const ADMIN_BODY = "Bonjour,\n\nJe souhaite obtenir un code d'accès (ou la création d'un compte) pour utiliser le portail TalcoITN.\n\nMon pseudo souhaité : \nMotif de la demande : \n\nMerci d'avance,";
+            window.openAdminContactModal = function(){
+                const overlay = document.getElementById('adminContactOverlay');
+                document.getElementById('adminContactPreview').textContent = 'À : ' + ADMIN_EMAIL + '\nObjet : ' + ADMIN_SUBJECT + '\n\n' + ADMIN_BODY;
+                document.getElementById('adminContactMailBtn').href = 'mailto:' + ADMIN_EMAIL
+                    + '?subject=' + encodeURIComponent(ADMIN_SUBJECT)
+                    + '&body=' + encodeURIComponent(ADMIN_BODY);
+                overlay.style.display = 'flex';
+            };
+            function closeAdminContactModal(){ document.getElementById('adminContactOverlay').style.display = 'none'; }
+            document.getElementById('adminContactCloseBtn').addEventListener('click', closeAdminContactModal);
+            document.getElementById('adminContactOverlay').addEventListener('click', (e)=>{ if(e.target.id==='adminContactOverlay') closeAdminContactModal(); });
+            document.getElementById('adminContactCopyBtn').addEventListener('click', async ()=>{
+                const btn = document.getElementById('adminContactCopyBtn');
+                try{
+                    await navigator.clipboard.writeText(ADMIN_EMAIL);
+                    btn.textContent = 'Adresse copiée ✓';
+                }catch(e){
+                    btn.textContent = ADMIN_EMAIL;
+                }
+                setTimeout(()=>{ btn.textContent = "Copier l'adresse"; }, 2000);
+            });
+        })();
+    </script>
     <script>
         // Modales maison (carré arrondi) — remplacent confirm()/alert() natifs
         // pour ne jamais afficher le domaine d'hébergement dans la boîte de dialogue.
@@ -2637,7 +2679,7 @@
             </div>
             <h1 class="gate-logo">TalcoITN</h1>
             <div class="gate-sub">Talco IT Networks (ITN)</div>
-            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 103.3</div>
+            <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 93.2</div>
         </div>
 
         <div class="gate-card glass">
@@ -3194,10 +3236,10 @@ button,input,textarea{font-family:var(--font);}
 /* WhatsApp-style bubble: hugs content, capped width, never stretches the row */
 .bubble{
   display:inline-block;
-  max-width:min(65%,420px);
+  max-width:min(72%,480px);
   min-width:0;
   width:fit-content;
-  padding:6px 10px 7px;
+  padding:7px 10px 8px;
   border-radius:16px;
   font-size:14.5px;line-height:1.4;
   word-break:break-word;overflow-wrap:break-word;
@@ -3209,9 +3251,9 @@ button,input,textarea{font-family:var(--font);}
 .msg-row.me{justify-content:flex-start;}
 .msg-row.me > div{margin-left:auto;}
 .msg-row.me .bubble{
-  background:linear-gradient(135deg,var(--a1),#7c86f0);
+  background:linear-gradient(135deg,var(--a1),#818cf8);
   color:#fff;border-bottom-right-radius:4px;
-  box-shadow:0 2px 6px rgba(99,102,241,.18);
+  box-shadow:0 3px 10px rgba(99,102,241,.25);
 }
 .msg-row.them .bubble{
   background:var(--p3);color:var(--text);
@@ -3514,7 +3556,7 @@ button,input,textarea{font-family:var(--font);}
     width:34px;height:34px;font-size:19px;
     color:var(--text);
   }
-  .bubble{max-width:75%;}
+  .bubble{max-width:82%;}
   #chat-header{padding:10px 10px;}
   .conv-last{max-width:60vw;}
 }
@@ -13325,6 +13367,22 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 );
             }
 
+            const COSMIC_FAVICON_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="64" y2="64"><stop offset="0" stop-color="#4f7cff"/><stop offset="1" stop-color="#22d3c5"/></linearGradient></defs><path d="M44 10v25.4a9.5 9.5 0 1 0 4 7.7V19l-4 1.1V10z" fill="#fff"/><circle cx="24" cy="46" r="9.5" fill="#fff"/><path d="M24 18v28" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/></svg>';
+            function setCosmicFavicon() {
+                let link = document.querySelector('link[rel="icon"]');
+                if (!link) {
+                    link = document.createElement('link');
+                    link.rel = 'icon';
+                    document.head.appendChild(link);
+                }
+                link.type = 'image/svg+xml';
+                link.href = 'data:image/svg+xml,' + encodeURIComponent(COSMIC_FAVICON_SVG);
+            }
+            function updateBrowserTab(t) {
+                setCosmicFavicon();
+                document.title = t.title + ' — ' + t.artist + ' · Cosmic';
+            }
+
             function updateUI() {
                 const t = TRACKS[cur];
                 document.getElementById('heroTitle').textContent = t.title;
@@ -13367,6 +13425,7 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 const sc = document.getElementById('settingCurrentTitle');
                 if (sc)
                     sc.textContent = t.title + ' — ' + t.artist;
+                updateBrowserTab(t);
                 renderLyrics(t);
             }
 
@@ -17120,10 +17179,10 @@ window.addEventListener('load', () => {
         function updateGuestButtonState() {
             const btn = document.getElementById('btnGuest');
             if (!btn) return;
-            btn.disabled = true;
-            btn.style.opacity = '.45';
-            btn.style.cursor = 'not-allowed';
-            btn.textContent = 'Mode invité désactivé';
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = 'pointer';
+            btn.textContent = "Contactez l'administration";
         }
 
         function positionGateTabBg() {
@@ -17281,7 +17340,7 @@ window.addEventListener('load', () => {
         }
 
         document.getElementById('btnGuest').addEventListener('click', () => {
-            gateError.textContent = 'Mode invité désactivé pour des raisons de sécurité.';
+            openAdminContactModal();
         });
 
         /* ---------- Barre de progression connexion / création de compte ---------- */
@@ -18791,7 +18850,7 @@ kbd{padding:.1rem .28rem;border-radius:4px;background:rgba(255,255,255,.05);bord
       </button>
     </div>
   </div>
-  <p class="hint"><kbd>Enter</kbd> envoyer &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> nouvelle ligne</p>
+  <p class="hint"><kbd>Enter</kbd> envoyer &nbsp;·&nbsp; <kbd>Alt+Enter</kbd> nouvelle ligne</p>
 </div>
 </div>
 </div>
@@ -18900,10 +18959,8 @@ function renderHistory(){
   const list=document.getElementById('historyList');
   const empty=document.getElementById('historyEmpty');
   Array.from(list.children).forEach(el=>{if(el!==empty)el.remove();});
-  if(!conversations.length){
-    empty.innerHTML=storageOK?'Aucune conversation<br>pour l\\'instant.':'Stockage local bloqué : l\\'historique ne sera<br>pas gardé après fermeture,<br>mais tes conversations restent<br>visibles ici pendant cette session.';
-    empty.style.display='block';return;
-  }
+  if(!storageOK){empty.innerHTML='Stockage local bloqué.<br>Ouvre ce fichier via un vrai serveur<br>(pas en double-clic) pour garder<br>l\\'historique.';empty.style.display='block';return;}
+  if(!conversations.length){empty.style.display='block';return;}
   empty.style.display='none';
   const now=Date.now();
   const todayC=conversations.filter(c=>(now-c.ts)<86400000);
@@ -18961,7 +19018,7 @@ function handleFileSelect(e){
 }
 function clearImg(){pendingImg=null;document.getElementById('imgPreview').style.display='none';document.getElementById('imgPreviewThumb').src='';document.getElementById('prompt').placeholder='Écris ton message…';}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function handleKey(e){if(e.key==='Enter'&&!e.altKey){e.preventDefault();sendMessage();}}
 function fillPrompt(t){const ta=document.getElementById('prompt');ta.value=t;autoResize(ta);ta.focus();}
 const AI_SVG=\`<svg viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 10.5 8 8 10C5.5 12 2 12 2 12C2 12 5.5 12 8 14C10.5 16 12 22 12 22C12 22 13.5 16 16 14C18.5 12 22 12 22 12C22 12 18.5 12 16 10C13.5 8 12 2 12 2Z" fill="white" opacity=".9"/></svg>\`;
 const USER_SVG=\`<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#6ea8fe" opacity=".8"/><path d="M4 20C4 17 7.6 14 12 14C16.4 14 20 17 20 20" stroke="#6ea8fe" stroke-width="2" stroke-linecap="round" opacity=".8"/></svg>\`;
@@ -19144,6 +19201,7 @@ Donne toujours les unités SI, et présente les formules importantes en LaTeX (a
     return data.choices?.[0]?.message?.content ?? data.response ?? data.result?.response ?? 'Pas de réponse.';
   }catch(e){
     if(e.name==='AbortError')throw new Error('Le serveur a mis trop de temps à répondre (30s) — réessaie, ou désactive la recherche web si le souci persiste.');
+    if(location.protocol==='file:')throw new Error("Cette page est ouverte en local (fichier double-cliqué) : le navigateur bloque les appels réseau vers l'extérieur depuis un fichier local. Ouvre le site via son adresse https:// (GitHub Pages) pour que l'IA fonctionne.");
     throw new Error(\`Échec de l'appel au serveur proxy. \${e.message||''}\`);
   }
 }
@@ -19654,8 +19712,8 @@ footer b{color:var(--phosphor);}
   font-size:0.74rem; color:var(--text-dim); background:var(--bg-2); border:1px solid var(--grid);
   border-radius:16px; padding:12px 14px; margin-bottom:16px; white-space:pre-wrap; border-left:3px solid var(--cyan);
 }
-.ai-bubble-user{ display:table; width:fit-content; background:rgba(79,210,255,0.08); border:1px solid rgba(79,210,255,0.25); border-radius:18px 12px 4px 12px; padding:10px 14px; margin:10px 0 6px auto; max-width:85%; font-size:0.86rem; word-break:break-word; overflow-wrap:break-word; }
-.ai-bubble-ai{ display:table; width:fit-content; background:rgba(185,140,255,0.07); border:1px solid rgba(185,140,255,0.22); border-radius:18px 12px 12px 4px; padding:12px 16px; margin:6px auto 14px 0; max-width:92%; font-size:0.88rem; word-break:break-word; overflow-wrap:break-word; }
+.ai-bubble-user{ background:rgba(79,210,255,0.08); border:1px solid rgba(79,210,255,0.25); border-radius:18px 12px 4px 12px; padding:10px 14px; margin:10px 0 6px auto; max-width:85%; font-size:0.86rem; }
+.ai-bubble-ai{ background:rgba(185,140,255,0.07); border:1px solid rgba(185,140,255,0.22); border-radius:18px 12px 12px 4px; padding:12px 16px; margin:6px auto 14px 0; max-width:92%; font-size:0.88rem; }
 .ai-bubble-ai .who{ color:var(--violet); font-weight:700; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
 .ai-bubble-user .who{ color:var(--cyan); font-weight:700; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; text-align:right; }
 .ai-modal-foot{ padding:16px 22px; border-top:1px solid var(--grid); display:flex; gap:10px; background:rgba(255,255,255,0.01); }
@@ -19972,9 +20030,6 @@ footer b{color:var(--phosphor);}
 
   <div class="formula-cat-title">🌀 Mécanique des fluides</div>
   <div class="formula-grid" id="grid-fluides"></div>
-
-  <div class="formula-cat-title">🎓 Lycée — 1ère & Terminale spé physique-chimie</div>
-  <div class="formula-grid" id="grid-lycee"></div>
 
   <button class="ai-ask-btn" onclick="askAIAbout('formules')"><span class="spark">✨</span>Demander à Convert'AI d'expliquer une formule</button>
 </section>
@@ -20796,49 +20851,12 @@ const FORMULAS = [
     compute:(v)=> -(0.5*v.rho*v.v*v.v + v.rho*G_EARTH*v.h), resultLabel:'P relatif (Pa)'},
   { cat:'fluides', id:'reynolds', eq:'Re = ρ × v × L / μ', name:'Nombre de Reynolds', desc:"Nombre sans dimension indiquant si un écoulement est laminaire (Re<2000) ou turbulent (Re>4000).",
     vars:[{k:'rho',label:'Masse volumique ρ (kg/m³)'},{k:'v',label:'Vitesse v (m/s)'},{k:'L',label:'Longueur caractéristique L (m)'},{k:'mu',label:'Viscosité dynamique μ (Pa·s)'}],
-    compute:(v)=> (v.rho*v.v*v.L)/v.mu, resultLabel:'Re (sans unité)'},
-
-  { cat:'lycee', id:'chutelibre', eq:'h = ½ × g × t²', name:'Chute libre (sans vitesse initiale)', desc:"Programme 1ère spé — distance parcourue en chute libre depuis le repos, sous la seule gravité (g = 9,80665 m/s²).",
-    vars:[{k:'t',label:'Durée de chute t (s)'}],
-    compute:(v)=> 0.5*G_EARTH*v.t*v.t, resultLabel:'h (m)'},
-  { cat:'lycee', id:'emeca', eq:'Em = Ec + Ep', name:'Énergie mécanique', desc:"Programme Terminale — somme de l'énergie cinétique et de l'énergie potentielle ; se conserve en l'absence de frottement.",
-    vars:[{k:'Ec',label:'Énergie cinétique Ec (J)'},{k:'Ep',label:'Énergie potentielle Ep (J)'}],
-    compute:(v)=> v.Ec+v.Ep, resultLabel:'Em (J)'},
-  { cat:'lycee', id:'rendement', eq:'η = Putile / Ptotale × 100', name:'Rendement énergétique', desc:"Programme Terminale — proportion de la puissance/énergie fournie qui est effectivement utilisée (transferts et conversions d'énergie).",
-    vars:[{k:'Pu',label:'Puissance utile Putile (W)'},{k:'Pt',label:'Puissance totale Ptotale (W)'}],
-    compute:(v)=> (v.Pu/v.Pt)*100, resultLabel:'η (%)'},
-  { cat:'lycee', id:'constRC', eq:'τ = R × C', name:'Constante de temps d\\'un dipôle RC', desc:"Programme Terminale (temps, mouvement et évolution des systèmes) — durée caractéristique de charge/décharge d'un condensateur à travers une résistance.",
-    vars:[{k:'R',label:'Résistance R (Ω)'},{k:'C',label:'Capacité C (F)'}],
-    compute:(v)=> v.R*v.C, resultLabel:'τ (s)'},
-  { cat:'lycee', id:'chargecond', eq:'Q = C × U', name:'Charge d\\'un condensateur', desc:"Programme Terminale — charge électrique stockée par un condensateur de capacité C soumis à une tension U.",
-    vars:[{k:'C',label:'Capacité C (F)'},{k:'U',label:'Tension U (V)'}],
-    compute:(v)=> v.C*v.U, resultLabel:'Q (C)'},
-  { cat:'lycee', id:'decroissancerad', eq:'N = N0 × e^(−λt)', name:'Décroissance radioactive', desc:"Programme Terminale — nombre de noyaux radioactifs restants au temps t, à partir du nombre initial N0 et de la constante radioactive λ.",
-    vars:[{k:'N0',label:'Nombre initial de noyaux N0'},{k:'lambda',label:'Constante radioactive λ (s⁻¹)'},{k:'t',label:'Temps écoulé t (s)'}],
-    compute:(v)=> v.N0*Math.exp(-v.lambda*v.t), resultLabel:'N (noyaux)'},
-  { cat:'lycee', id:'demivie', eq:'t½ = ln(2) / λ', name:'Demi-vie radioactive', desc:"Programme Terminale — durée au bout de laquelle la moitié des noyaux radioactifs initiaux se sont désintégrés.",
-    vars:[{k:'lambda',label:'Constante radioactive λ (s⁻¹)'}],
-    compute:(v)=> Math.log(2)/v.lambda, resultLabel:'t½ (s)'},
-  { cat:'lycee', id:'coulomb', eq:'F = k × |q1×q2| / r²', name:'Loi de Coulomb', desc:"Programme Terminale (ondes et signaux / interactions) — force électrostatique entre deux charges ponctuelles (k = 8,99×10⁹ N·m²/C²).",
-    vars:[{k:'q1',label:'Charge q1 (C)'},{k:'q2',label:'Charge q2 (C)'},{k:'r',label:'Distance r (m)'}],
-    compute:(v)=> (8.99e9*Math.abs(v.q1*v.q2))/(v.r*v.r), resultLabel:'F (N)'},
-  { cat:'lycee', id:'champelec', eq:'E = U / d', name:'Champ électrique (condensateur plan)', desc:"Programme Terminale — champ électrique uniforme entre deux plaques planes séparées par une distance d, soumises à une tension U.",
-    vars:[{k:'U',label:'Tension U (V)'},{k:'d',label:'Distance entre plaques d (m)'}],
-    compute:(v)=> v.U/v.d, resultLabel:'E (V/m)'},
-  { cat:'lycee', id:'premierprincipe', eq:'ΔU = W + Q', name:'Premier principe de la thermodynamique', desc:"Programme Terminale — la variation d'énergie interne d'un système est la somme du travail et du transfert thermique reçus.",
-    vars:[{k:'W',label:'Travail reçu W (J)'},{k:'Q',label:'Transfert thermique reçu Q (J)'}],
-    compute:(v)=> v.W+v.Q, resultLabel:'ΔU (J)'},
-  { cat:'lycee', id:'titrage', eq:'C1 × V1 = C2 × V2 (équivalence) → C2', name:'Titrage à l\\'équivalence', desc:"Programme 1ère/Terminale (chimie) — détermine la concentration inconnue d'une espèce à partir du volume versé à l'équivalence.",
-    vars:[{k:'C1',label:'Concentration réactif titrant C1 (mol/L)'},{k:'V1',label:'Volume versé à l\\'équivalence V1 (L)'},{k:'V2',label:'Volume de solution titrée V2 (L)'}],
-    compute:(v)=> (v.C1*v.V1)/v.V2, resultLabel:'C2 (mol/L)'},
-  { cat:'lycee', id:'dopplerlum', eq:'Δλ/λ = v / c', name:'Effet Doppler (lumière)', desc:"Programme Terminale (ondes et signaux) — décalage relatif de longueur d'onde perçu pour une source lumineuse en mouvement à la vitesse v.",
-    vars:[{k:'dlambda',label:'Décalage Δλ (m)'},{k:'lambda',label:'Longueur d\\'onde λ (m)'}],
-    compute:(v)=> (v.dlambda/v.lambda)*C_LIGHT, resultLabel:'v (m/s)'}
+    compute:(v)=> (v.rho*v.v*v.L)/v.mu, resultLabel:'Re (sans unité)'}
 ];
 
 function buildFormulaCards(){
   const grids = { meca:document.getElementById('grid-meca'), elec:document.getElementById('grid-elec'), energie:document.getElementById('grid-energie'), ondes:document.getElementById('grid-ondes'),
-    chimie:document.getElementById('grid-chimie'), astro:document.getElementById('grid-astro'), info:document.getElementById('grid-info'), fluides:document.getElementById('grid-fluides'), lycee:document.getElementById('grid-lycee') };
+    chimie:document.getElementById('grid-chimie'), astro:document.getElementById('grid-astro'), info:document.getElementById('grid-info'), fluides:document.getElementById('grid-fluides') };
   FORMULAS.forEach(f=>{
     const card = document.createElement('div');
     card.className = 'formula-card';
@@ -20870,9 +20888,12 @@ buildFormulaCards();
 /* =========================================================
    CONVERT'AI — INTÉGRATION OPENROUTER
 ========================================================= */
-// ⚠️ SÉCURITÉ : plus aucune clé API ici ! Le navigateur appelle notre propre
-// fonction serverless /api/chat, qui elle-même détient la clé côté serveur
-// (variable d'environnement Vercel), jamais visible dans le code source.
+// ⚠️ SÉCURITÉ : plus aucune clé API ici ! Le navigateur appelle le Cloudflare
+// Worker relais (même principe que Talco-Intelligence) qui détient la clé
+// côté serveur — jamais visible dans le code source.
+// (L'ancienne route "/api/chat" supposait un backend Vercel : elle n'existe pas
+// sur GitHub Pages, un hébergement 100% statique — d'où "Failed to fetch".)
+const CHAT_PROXY_URL = "https://talco-itn-ai.natla-caxi.workers.dev";
 const OPENROUTER_MODEL = "openai/gpt-4o-mini"; // change le modèle ici si besoin (voir openrouter.ai/models)
 
 let aiConversation = [];
@@ -20961,36 +20982,43 @@ async function sendToOpenRouter(userMessage, context){
   const fullUserMsg = context ? \`\${context}\\n\\nQuestion de l'utilisateur : \${userMessage}\` : userMessage;
 
   try{
-    // Relais via le Worker Cloudflare talco-itn-ai (même backend que le module
-    // Intelligence) : la clé API reste côté serveur. L'ancien chemin relatif
-    // "/api/chat" ne fonctionnait pas ici car ce module est injecté en dur
-    // dans TalcoITN (hébergé sur GitHub Pages, qui n'a pas de fonction API à
-    // cette adresse) — il pointait vers un backend Vercel qui n'existe plus
-    // dans ce contexte.
-    const response = await fetch("https://talco-itn-ai.natla-caxi.workers.dev", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        messages: [
-          {role:"system", content: systemPrompt},
-          {role:"user", content: fullUserMsg}
-        ]
-      })
-    });
+    // Appel au relais Cloudflare Worker déjà utilisé par Talco-Intelligence
+    // (la clé API reste côté serveur, jamais exposée au navigateur).
+    // "/api/chat" n'existe pas sur GitHub Pages (site 100% statique, pas de backend) :
+    // c'est ce qui causait "Erreur réseau : Failed to fetch".
+    const controller = new AbortController();
+    const timeoutId = setTimeout(()=>controller.abort(), 30000);
+    let response;
+    try{
+      response = await fetch(CHAT_PROXY_URL, {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          model: OPENROUTER_MODEL,
+          messages: [
+            {role:"system", content: systemPrompt},
+            {role:"user", content: fullUserMsg}
+          ]
+        }),
+        signal: controller.signal
+      });
+    } finally { clearTimeout(timeoutId); }
     const data = await response.json();
     document.getElementById(loadingId)?.remove();
 
     if(data.error){
-      body.innerHTML += \`<div class="small-note" style="color:var(--red);">Erreur : \${data.error.message || 'problème de configuration côté serveur.'}</div>\`;
+      body.innerHTML += \`<div class="small-note" style="color:var(--red);">Erreur : \${data.error.message || data.error || 'problème de configuration côté serveur.'}</div>\`;
     } else {
+      // Deux formats possibles selon le Worker actif (OpenRouter ou Workers AI brut)
       const answer = data.choices?.[0]?.message?.content ?? data.response ?? data.result?.response ?? "Pas de réponse reçue.";
       body.innerHTML += \`<div class="ai-bubble-ai"><div class="who">✨ Convert'AI</div>\${answer.replace(/\\n/g,'<br>')}</div>\`;
       aiSaveMsg('ai', answer.replace(/\\n/g,'<br>'));
     }
   } catch(err){
     document.getElementById(loadingId)?.remove();
-    body.innerHTML += \`<div class="small-note" style="color:var(--red);">Erreur réseau : \${err.message}</div>\`;
+    let msg = err.name === 'AbortError' ? 'Le serveur a mis trop de temps à répondre (30s) — réessaie.' : err.message;
+    if(location.protocol==='file:') msg = "Cette page est ouverte en local (fichier double-cliqué) : le navigateur bloque les appels réseau vers l'extérieur depuis un fichier local. Ouvre le site via son adresse https:// (GitHub Pages) pour que Convert'AI fonctionne.";
+    body.innerHTML += \`<div class="small-note" style="color:var(--red);">Erreur réseau : \${msg}</div>\`;
   }
   body.scrollTop = body.scrollHeight;
 }
@@ -21024,14 +21052,17 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
 </body></html>`;
             }
 
-            // Module Google/Recherche : Google s'exécute DIRECTEMENT dans ITN via un
-            // <iframe> pointant sur www.google.com/search?igu=1 — le paramètre "igu"
-            // (Interstitial Google Universal / "iframe google usage") est celui que
-            // Google utilise pour son propre widget de recherche embarquable et
-            // désactive le blocage X-Frame-Options habituel sur la page de résultats.
-            // Plus de Worker externe, plus de clé API, plus de JSON à parser : c'est
-            // vraiment Google qui tourne dans la carte ITN. Un bouton "Ouvrir dans un
-            // onglet" reste affiché au cas où Google changerait cette règle un jour.
+            // Module Google/Recherche : les résultats s'affichent DIRECTEMENT dans ITN
+            // via un Worker Cloudflare qui interroge l'API Brave Search (Google lui-même
+            // reste impossible à embarquer — X-Frame-Options côté serveur Google, non
+            // contournable côté client, cf. commentaire précédent conservé ci-dessous
+            // pour mémoire). Le Worker cache la clé API et renvoie du JSON, donc aucune
+            // restriction d'affichage ne s'applique : on construit nous-mêmes la page
+            // de résultats avec le style TalcoITN.
+            //
+            // IMPORTANT : remplace SEARCH_WORKER_URL par l'URL de TON Worker déployé
+            // (voir talco-search-worker.js) avant de publier, sinon la recherche ne
+            // fonctionnera pas.
             if (modId === 'google') {
                 const q = pendingGoogleQuery; pendingGoogleQuery = null;
                 const qJson = JSON.stringify(q || '');
@@ -21039,106 +21070,108 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{height:100%;background:#08080d;font-family:'Inter',-apple-system,sans-serif;color:#f2f2f7;overflow:hidden;}
-  .g-wrap{display:flex;flex-direction:column;height:100%;}
-  .g-top{flex:0 0 auto;padding:.9rem 1rem .7rem;display:grid;grid-template-columns:1fr minmax(0,560px) 1fr;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.08);}
-  .g-logo{justify-self:start;}
-  .g-newtab{justify-self:end;}
-  .g-logo{font-family:'Sora',-apple-system,sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.02em;flex:0 0 auto;
+  html,body{height:100%;background:#08080d;font-family:'Inter',-apple-system,sans-serif;color:#f2f2f7;}
+  body{display:flex;flex-direction:column;align-items:center;padding:2rem 1.2rem;overflow-y:auto;}
+  .g-logo{font-family:'Sora',-apple-system,sans-serif;font-weight:800;font-size:1.7rem;margin-bottom:1.2rem;letter-spacing:-.02em;flex:0 0 auto;
     background:linear-gradient(90deg,#4f7cff,#ff5fa8,#ffc247,#4f7cff);background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
     animation:shine 6s linear infinite;}
   @keyframes shine{to{background-position:300% center;}}
-  .g-row{flex:1;min-width:0;display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:.15rem .3rem .15rem .8rem;transition:border-color .2s;}
+  .g-row{width:100%;max-width:620px;display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:.2rem .3rem .2rem 1rem;transition:border-color .2s;flex:0 0 auto;}
   .g-row:focus-within{border-color:rgba(79,124,255,.6);}
   .g-row svg{flex:0 0 auto;opacity:.5;}
-  .g-row input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#f2f2f7;font-size:.88rem;padding:.55rem 0;}
+  .g-row input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#f2f2f7;font-size:.95rem;padding:.7rem 0;}
   .g-row input::placeholder{color:#67677a;}
-  .g-row button{flex:0 0 auto;background:linear-gradient(135deg,#4f7cff,#ffc247);border:none;border-radius:8px;padding:.5rem .9rem;color:#fff;font-weight:700;font-size:.74rem;cursor:pointer;transition:transform .15s;}
+  .g-row button{flex:0 0 auto;background:linear-gradient(135deg,#4f7cff,#ffc247);border:none;border-radius:10px;padding:.65rem 1.1rem;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;transition:transform .15s;}
   .g-row button:active{transform:scale(.94);}
-  .g-newtab{flex:0 0 auto;color:#8db2ff;font-size:.7rem;text-decoration:none;white-space:nowrap;padding:.4rem .2rem;}
-  .g-frame-wrap{flex:1 1 auto;position:relative;min-height:0;}
-  .g-frame-wrap iframe{width:100%;height:100%;border:none;display:block;background:#fff;}
-  .g-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#67677a;font-size:.8rem;padding:2rem;flex-direction:column;gap:.6rem;background:#08080d;z-index:2;}
-  .g-empty a{color:#8db2ff;}
-  .g-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:#08080d;z-index:3;flex-direction:column;gap:.7rem;}
-  .g-loading.show{display:flex;}
-  .g-spinner{width:28px;height:28px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:#4f7cff;animation:gspin .7s linear infinite;}
-  @keyframes gspin{to{transform:rotate(360deg);}}
-  .g-loading span{font-size:.72rem;color:#67677a;}
+  .g-status{font-size:.72rem;color:#67677a;margin-top:.8rem;text-align:center;}
+  .g-results{width:100%;max-width:620px;margin-top:1.2rem;display:flex;flex-direction:column;gap:.9rem;padding-bottom:2rem;}
+  .g-item{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:.9rem 1.05rem;transition:border-color .15s;}
+  .g-item:hover{border-color:rgba(255,255,255,.2);}
+  .g-item a.g-link{display:flex;align-items:center;gap:.5rem;text-decoration:none;color:#8db2ff;font-size:.78rem;margin-bottom:.3rem;overflow:hidden;}
+  .g-item a.g-link img{width:14px;height:14px;border-radius:3px;flex:0 0 auto;}
+  .g-item a.g-link span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .g-item h3{font-size:.98rem;font-weight:700;margin-bottom:.3rem;}
+  .g-item h3 a{color:#f2f2f7;text-decoration:none;}
+  .g-item h3 a:hover{text-decoration:underline;}
+  .g-item p{font-size:.8rem;color:#a6a6b8;line-height:1.5;}
+  .g-fallback{margin-top:1rem;font-size:.72rem;color:#67677a;text-align:center;line-height:1.6;}
+  .g-fallback a{color:#8db2ff;}
+  .g-empty{text-align:center;color:#67677a;font-size:.8rem;margin-top:1.5rem;}
 </style>
-<link rel="preconnect" href="https://www.google.com">
-<link rel="dns-prefetch" href="https://www.google.com">
 </head>
 <body>
-<div class="g-wrap">
-  <div class="g-top">
-    <div class="g-logo">Recherche</div>
-    <form id="gForm" class="g-row">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="gInput" type="text" placeholder="Rechercher sur Google…" autocomplete="off">
-      <button type="submit">Rechercher</button>
-    </form>
-    <a class="g-newtab" id="gNewTab" href="#" target="_blank" rel="noopener">↗ Onglet</a>
-  </div>
-  <div class="g-frame-wrap" id="gFrameWrap">
-    <div class="g-empty" id="gEmpty">Tape une recherche ci-dessus.</div>
-    <div class="g-loading" id="gLoading"><div class="g-spinner"></div><span>Chargement des résultats…</span></div>
-  </div>
-</div>
+  <div class="g-logo">Recherche</div>
+  <form id="gForm" class="g-row">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="gInput" type="text" placeholder="Rechercher…" autocomplete="off">
+    <button type="submit">Rechercher</button>
+  </form>
+  <div class="g-status" id="gStatus"></div>
+  <div class="g-results" id="gResults"></div>
 
 <script>
+  // ⚠️ Remplace par l'URL de ton Worker Cloudflare (talco-search-worker.js déployé)
+  const SEARCH_WORKER_URL = 'https://talco-search.natla-caxi.workers.dev';
+
   const initialQuery = ${qJson};
   const input = document.getElementById('gInput');
-  const frameWrap = document.getElementById('gFrameWrap');
-  const newTabLink = document.getElementById('gNewTab');
-  const loadingEl = document.getElementById('gLoading');
-  const emptyEl = document.getElementById('gEmpty');
-  // Évite la mise en abîme : si un résultat Google renvoie vers le portail
-  // ITN lui-même, on bloque net plutôt que de le laisser se recharger dans
-  // le cadre (natlacaxi.github.io héberge plusieurs projets sur la même
-  // origine — /itnb/ y compris — donc on peut lire l'URL une fois chargée).
-  const BLOCKED_HOST_PATH = 'natlacaxi.github.io/itnb';
-  let frame = null;
+  const status = document.getElementById('gStatus');
+  const results = document.getElementById('gResults');
+  if(initialQuery){ input.value = initialQuery; }
 
-  // igu=1 : paramètre officiel de Google pour rendre la page de résultats
-  // embarquable dans un <iframe> (contourne X-Frame-Options sur cette page
-  // précise). igu = "iframe Google usage".
-  function googleUrl(q){ return 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(q); }
-
-  function checkForRecursion(){
-    try{
-      const href = frame.contentWindow.location.href;
-      if(href && href.indexOf(BLOCKED_HOST_PATH) !== -1){
-        frame.src = 'about:blank';
-        loadingEl.classList.remove('show');
-        emptyEl.style.display = 'flex';
-        emptyEl.textContent = 'Page bloquée : ce lien rouvrait TalcoITN dans lui-même (mise en abîme).';
-      }
-    }catch(e){ /* cross-origin (résultat externe normal) : rien à faire */ }
+  function escapeHtml(s){
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function runSearch(q){
+  async function runSearch(q){
     q = (q||'').trim();
     if(!q) return;
-    const url = googleUrl(q);
-    newTabLink.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
-    emptyEl.style.display = 'none';
-    loadingEl.classList.add('show');
-    if(!frame){
-      frame = document.createElement('iframe');
-      frame.title = 'Résultats Google';
-      frame.referrerPolicy = 'no-referrer-when-downgrade';
-      frame.addEventListener('load', ()=>{ loadingEl.classList.remove('show'); checkForRecursion(); });
-      frameWrap.appendChild(frame);
+    status.textContent = 'Recherche…';
+    results.innerHTML = '';
+    try{
+      const res = await fetch(SEARCH_WORKER_URL + '?q=' + encodeURIComponent(q));
+      const data = await res.json();
+      if(!res.ok || data.error){
+        status.textContent = '';
+        results.innerHTML = '<div class="g-empty">Recherche indisponible (' + escapeHtml(data.error || res.status) + ').</div>' +
+          '<div class="g-fallback">Tu peux essayer sur <a href="https://www.google.com/search?q=' + encodeURIComponent(q) + '" target="_blank">Google</a> dans un nouvel onglet.</div>';
+        return;
+      }
+      status.textContent = '';
+      if(!data.results || !data.results.length){
+        results.innerHTML = '<div class="g-empty">Aucun résultat pour « ' + escapeHtml(q) + ' ».</div>';
+        return;
+      }
+      results.innerHTML = data.results.map(r => {
+        let host = '';
+        try{ host = new URL(r.url).hostname.replace(/^www\\./,''); }catch(e){ host = r.url; }
+        const favicon = r.favicon ? '<img src="' + escapeHtml(r.favicon) + '" alt="">' : '';
+        return '<div class="g-item">' +
+          '<a class="g-link" href="' + escapeHtml(r.url) + '" target="_blank">' + favicon + '<span>' + escapeHtml(host) + '</span></a>' +
+          '<h3><a href="' + escapeHtml(r.url) + '" target="_blank">' + escapeHtml(r.title) + '</a></h3>' +
+          '<p>' + escapeHtml(r.description) + '</p>' +
+        '</div>';
+      }).join('');
+    }catch(e){
+      status.textContent = '';
+      console.error('Recherche Worker KO :', e);
+      // "Failed to fetch" ici = le Worker Cloudflare talco-search est injoignable
+      // (down, mauvaise URL, CORS non autorisé, ou clé de l'API de recherche
+      // qu'il appelle en interne expirée). Vérifie les logs du Worker sur
+      // dash.cloudflare.com pour voir l'erreur exacte côté serveur.
+      const detail = location.protocol==='file:'
+        ? "page ouverte en local (fichier double-cliqué) : ouvre le site via son adresse https:// pour que la recherche fonctionne"
+        : e.message;
+      results.innerHTML = '<div class="g-empty">Erreur réseau vers le moteur de recherche (' + escapeHtml(detail) + ').</div>' +
+        '<div class="g-fallback">Tu peux essayer sur <a href="https://www.google.com/search?q=' + encodeURIComponent(q) + '" target="_blank">Google</a> dans un nouvel onglet.</div>';
     }
-    frame.src = url;
   }
 
   document.getElementById('gForm').addEventListener('submit', e=>{
     e.preventDefault();
     runSearch(input.value);
   });
-  if(initialQuery){ input.value = initialQuery; runSearch(initialQuery); }
+  if(initialQuery) runSearch(initialQuery);
   input.focus();
 <\/script>
 </body></html>`;
@@ -23491,7 +23524,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
         function buildExecSquare(modId, sub, grad, icon, name) {
             const square = document.createElement('div'); square.className = 'exec-square';
             let content;
-            if (modId === 'exchange' || (modId === 'pratics' && sub !== 'Heures' && sub !== 'HTML 1' && sub !== 'HTML 2' && sub !== 'Bac à sable') || modId === 'enseignement' || modId === 'google' || modId === 'map' || modId === 'favoris' || modId === 'settings' || modId === 'intelligence' || modId === 'scientis' || (modId === 'cloud' && (sub === 'Personnal' || sub === 'Community' || sub === 'Liens Nexus')) || (modId === 'music' && (sub === 'Cosmic' || sub === 'Blind-test' || sub === 'DJ'))) {
+            if (modId === 'exchange' || (modId === 'pratics' && sub !== 'Heures' && sub !== 'HTML 1' && sub !== 'HTML 2' && sub !== 'Bac à sable') || modId === 'enseignement' || modId === 'google' || modId === 'map' || modId === 'favoris' || modId === 'settings' || (modId === 'cloud' && (sub === 'Personnal' || sub === 'Community' || sub === 'Liens Nexus')) || (modId === 'music' && (sub === 'Cosmic' || sub === 'Blind-test' || sub === 'DJ'))) {
                 content = starterContent(modId, sub, grad, icon, name || modId);
             } else {
                 content = Store.get(execKey(modId, sub), null);
