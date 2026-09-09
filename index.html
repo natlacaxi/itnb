@@ -66,12 +66,26 @@
     // (ex: Cosmic) pour refléter titre + logo dans le VRAI onglet du
     // navigateur. Impossible depuis l'intérieur d'un iframe sandboxé,
     // d'où ce relais via postMessage.
+    let TALCO_DEFAULT_TITLE = null, TALCO_DEFAULT_FAVICON_HREF = null;
+    window.addEventListener('load', function () {
+      TALCO_DEFAULT_TITLE = document.title;
+      const l = document.querySelector('link[rel="icon"]');
+      if (l) TALCO_DEFAULT_FAVICON_HREF = l.href;
+    });
     window.addEventListener('message', function (e) {
       const d = e.data;
-      if (!d || d.type !== 'talco-now-playing') return;
-      document.title = d.title + ' — ' + d.artist + (d.app ? ' · ' + d.app : '');
+      if (!d || !d.type || d.type.indexOf('talco-now-playing') !== 0) return;
       let link = document.querySelector('link[rel="icon"]');
       if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
+      if (d.type === 'talco-now-playing-stop') {
+        // Le module (ex: Cosmic) a été fermé/quitté : on remet le titre et
+        // le favicon d'origine de TalcoITN au lieu de laisser traîner ceux
+        // du morceau qui jouait.
+        if (TALCO_DEFAULT_TITLE) document.title = TALCO_DEFAULT_TITLE;
+        if (TALCO_DEFAULT_FAVICON_HREF) link.href = TALCO_DEFAULT_FAVICON_HREF;
+        return;
+      }
+      document.title = d.title + ' — ' + d.artist + (d.app ? ' · ' + d.app : '');
       const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="url(#g)"/><defs><linearGradient id="g" x1="0" y1="0" x2="64" y2="64"><stop offset="0" stop-color="#4f7cff"/><stop offset="1" stop-color="#22d3c5"/></linearGradient></defs><path d="M44 10v25.4a9.5 9.5 0 1 0 4 7.7V19l-4 1.1V10z" fill="#fff"/><circle cx="24" cy="46" r="9.5" fill="#fff"/><path d="M24 18v28" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/></svg>';
       link.type = 'image/svg+xml';
       link.href = 'data:image/svg+xml,' + encodeURIComponent(svg);
@@ -2706,7 +2720,7 @@
       </div>
       <h1 class="gate-logo">TalcoITN</h1>
       <div class="gate-sub">Talco IT Networks (ITN)</div>
-      <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 109.3</div>
+      <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 110.2</div>
     </div>
 
     <div class="gate-card glass">
@@ -13409,6 +13423,17 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                     window.parent.postMessage({ type: 'talco-now-playing', app: 'Cosmic', title: t.title, artist: t.artist }, '*');
                 } catch (e) {}
             }
+            // Quand on quitte Cosmic (fermeture du pane, changement de module,
+            // retour à l'accueil...), l'iframe est détachée/déchargée : on prévient
+            // TalcoITN de remettre son titre + favicon d'origine, sinon ils restent
+            // affichés indéfiniment dans l'onglet du navigateur.
+            function notifyCosmicClosed() {
+                try {
+                    window.parent.postMessage({ type: 'talco-now-playing-stop' }, '*');
+                } catch (e) {}
+            }
+            window.addEventListener('pagehide', notifyCosmicClosed);
+            window.addEventListener('unload', notifyCosmicClosed);
 
             function updateUI() {
                 const t = TRACKS[cur];
@@ -18911,6 +18936,11 @@ function safeAtob(s){
 const PROXY_URL='https://talco-itn-ai.natla-caxi.workers.dev';
 const NEWS_PROXY_URL='https://talco-intelligence.natla-caxi.workers.dev';
 const NEWS_MODEL='openai/gpt-oss-120b'; // ID valide côté OpenRouter (sans le préfixe @cf/, réservé à Cloudflare Workers AI)
+// Pool de 5 Workers Cloudflare identiques (même code) déployés en parallèle pour
+// répartir la charge des ~100 utilisateurs et éviter la panne totale si l'un
+// d'eux est à quota ou indisponible. PROXY_URL reste en 1re position (compat).
+const AI_WORKERS=['https://talco-itn-ai.natla-caxi.workers.dev','https://talco-itn-ai.talcoitn.workers.dev','https://talco-itn-ai.ota-claudeai.workers.dev','https://talco-itn-ai.otu-claudeai.workers.dev','https://talco-itn-ai.adf-aeroport-vlt.workers.dev'];
+function pickWorkerOrder(){const s=Math.floor(Math.random()*AI_WORKERS.length);return AI_WORKERS.map((_,i)=>AI_WORKERS[(s+i)%AI_WORKERS.length]);}
 let newsMode=(localStorage.getItem('talco_news_mode')==='1');
 let webSearchMode=(localStorage.getItem('talco_websearch_mode')==='1');
 // En mode normal + case "Recherche web" cochée, on route quand même vers le proxy actu (seul à savoir faire une recherche web),
@@ -19209,19 +19239,22 @@ Donne toujours les unités SI, et présente les formules importantes en LaTeX (a
   history.forEach(m=>{messages.push({role:m.role==='ai'?'assistant':'user',content:m.text||''});});
   messages.push({role:'user',content:img?userContent:(text||'')});
   try{
-    const controller=new AbortController();
-    const timeoutId=setTimeout(()=>controller.abort(),30000);
-    let res;
-    try{
-      res=await fetch(getActiveProxyUrl(),{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:newsMode?NEWS_MODEL:(webSearchMode?model.replace(/^@cf\\//,''):model),messages,temperature:0.9,max_tokens:3072}),
-        signal:controller.signal
-      });
-    }finally{clearTimeout(timeoutId);}
-    const data=await res.json();
-    if(data.error)throw new Error(data.error.message||data.error||'Erreur API');
+    const urlsToTry=(newsMode||webSearchMode)?[NEWS_PROXY_URL]:pickWorkerOrder();
+    const bodyStr=JSON.stringify({model:newsMode?NEWS_MODEL:(webSearchMode?model.replace(/^@cf\\//,''):model),messages,temperature:0.9,max_tokens:3072});
+    let data=null,lastErr=null;
+    for(const u of urlsToTry){
+      const controller=new AbortController();
+      const timeoutId=setTimeout(()=>controller.abort(),30000);
+      try{
+        const res=await fetch(u,{method:'POST',headers:{'Content-Type':'application/json'},body:bodyStr,signal:controller.signal});
+        clearTimeout(timeoutId);
+        if(res.status===429||res.status===503){lastErr=new Error('Worker occupé ('+res.status+')');continue;}
+        const j=await res.json();
+        if(j.error){lastErr=new Error(j.error.message||j.error);continue;}
+        data=j;break;
+      }catch(err){clearTimeout(timeoutId);lastErr=err;continue;}
+    }
+    if(!data)throw lastErr||new Error('Tous les Workers sont indisponibles.');
     // Deux formats possibles selon le Worker actif :
     // - talco-intelligence (OpenRouter) : {choices:[{message:{content}}]}
     // - talco-itn-ai (Workers AI brut)  : {response:"..."} directement à la racine
@@ -20921,7 +20954,15 @@ buildFormulaCards();
 // (L'ancienne route "/api/chat" supposait un backend Vercel : elle n'existe pas
 // sur GitHub Pages, un hébergement 100% statique — d'où "Failed to fetch".)
 const CHAT_PROXY_URL = "https://talco-itn-ai.natla-caxi.workers.dev";
-const OPENROUTER_MODEL = "openai/gpt-4o-mini"; // change le modèle ici si besoin (voir openrouter.ai/models)
+const OPENROUTER_MODEL = "@cf/openai/gpt-oss-120b"; // modèle Cloudflare Workers AI natif, gratuit — évite l'erreur "Insufficient AI Gateway credits" (facturation unifiée OpenRouter)
+// Pool de 5 Workers Cloudflare identiques (même code que CHAT_PROXY_URL) pour
+// répartir la charge des ~100 utilisateurs et basculer automatiquement sur un
+// autre Worker si le premier tiré est à quota ou indisponible.
+const AI_WORKERS = ["https://talco-itn-ai.natla-caxi.workers.dev", "https://talco-itn-ai.talcoitn.workers.dev", "https://talco-itn-ai.ota-claudeai.workers.dev", "https://talco-itn-ai.otu-claudeai.workers.dev", "https://talco-itn-ai.adf-aeroport-vlt.workers.dev"];
+function pickWorkerOrder(){
+  const start = Math.floor(Math.random() * AI_WORKERS.length);
+  return AI_WORKERS.map((_, i) => AI_WORKERS[(start + i) % AI_WORKERS.length]);
+}
 
 let aiConversation = [];
 let aiCurrentContext = "";
@@ -21009,32 +21050,41 @@ async function sendToOpenRouter(userMessage, context){
   const fullUserMsg = context ? \`\${context}\\n\\nQuestion de l'utilisateur : \${userMessage}\` : userMessage;
 
   try{
-    // Appel au relais Cloudflare Worker déjà utilisé par Talco-Intelligence
+    // Appel au pool de Workers Cloudflare (répartition + repli automatique
+    // si l'un est à quota/indisponible ; même principe que Talco-Intelligence)
     // (la clé API reste côté serveur, jamais exposée au navigateur).
     // "/api/chat" n'existe pas sur GitHub Pages (site 100% statique, pas de backend) :
     // c'est ce qui causait "Erreur réseau : Failed to fetch".
-    const controller = new AbortController();
-    const timeoutId = setTimeout(()=>controller.abort(), 30000);
-    let response;
-    try{
-      response = await fetch(CHAT_PROXY_URL, {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
-          model: OPENROUTER_MODEL,
-          messages: [
-            {role:"system", content: systemPrompt},
-            {role:"user", content: fullUserMsg}
-          ]
-        }),
-        signal: controller.signal
-      });
-    } finally { clearTimeout(timeoutId); }
-    const data = await response.json();
+    const payload = {
+      model: OPENROUTER_MODEL,
+      messages: [
+        {role:"system", content: systemPrompt},
+        {role:"user", content: fullUserMsg}
+      ]
+    };
+    const urlsToTry = pickWorkerOrder();
+    let data = null, lastErr = null;
+    for (const u of urlsToTry) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(()=>controller.abort(), 30000);
+      try {
+        const response = await fetch(u, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        if (response.status === 429 || response.status === 503) { lastErr = new Error("Worker occupé (" + response.status + ")"); continue; }
+        const j = await response.json();
+        if (j.error) { lastErr = new Error(j.error.message || j.error); continue; }
+        data = j; break;
+      } catch (err) { clearTimeout(timeoutId); lastErr = err; continue; }
+    }
     document.getElementById(loadingId)?.remove();
 
-    if(data.error){
-      body.innerHTML += \`<div class="small-note" style="color:var(--red);">Erreur : \${data.error.message || data.error || 'problème de configuration côté serveur.'}</div>\`;
+    if (!data) {
+      body.innerHTML += \`<div class="small-note" style="color:var(--red);">Erreur : \${lastErr?.message || 'tous les Workers sont indisponibles.'}</div>\`;
     } else {
       // Deux formats possibles selon le Worker actif (OpenRouter ou Workers AI brut)
       const answer = data.choices?.[0]?.message?.content ?? data.response ?? data.result?.response ?? "Pas de réponse reçue.";
@@ -21660,6 +21710,22 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
 #seqCoverPreview.show{display:block;}
 #seqTitreInput{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:.35rem .6rem;color:#f2f2f7;font-size:.78rem;font-weight:700;font-family:inherit;flex:1;min-width:160px;}
 .empty-seq{color:#67677a;font-size:.8rem;text-align:center;padding:2.2rem;}
+#ensAiFab{position:fixed;right:1.1rem;bottom:1.1rem;z-index:99997;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(135deg,#6d5dfc,#ff6fa5);color:#fff;font-size:1.3rem;cursor:pointer;box-shadow:0 8px 20px -6px rgba(0,0,0,.6);}
+#ensAiFab:active{transform:scale(.94);}
+#ensAiOverlay{position:fixed;inset:0;background:rgba(5,3,10,.55);z-index:99998;display:flex;align-items:flex-end;justify-content:flex-end;padding:1.1rem;}
+#ensAiOverlay.hidden{display:none;}
+#ensAiModal{width:360px;max-width:92vw;height:480px;max-height:80vh;background:#12121c;border:1px solid rgba(255,255,255,.1);border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 50px -12px rgba(0,0,0,.7);}
+#ensAiHead{display:flex;align-items:center;gap:.5rem;padding:.7rem .9rem;border-bottom:1px solid rgba(255,255,255,.08);font-size:.85rem;font-weight:700;}
+#ensAiHead button{margin-left:.3rem;background:none;border:none;color:#9a9ab0;cursor:pointer;font-size:.8rem;}
+#ensAiHead button:hover{color:#fff;}
+#ensAiHead .sp{margin-left:auto;}
+#ensAiBody{flex:1;overflow-y:auto;padding:.8rem;font-size:.8rem;line-height:1.5;display:flex;flex-direction:column;gap:.6rem;}
+#ensAiBody .who{font-size:.65rem;color:#8a8aa0;margin-bottom:.15rem;}
+.ens-bubble-user{align-self:flex-end;background:#2a2a3d;border-radius:12px 12px 2px 12px;padding:.5rem .7rem;max-width:85%;color:#f2f2f7;}
+.ens-bubble-ai{align-self:flex-start;background:rgba(109,93,252,.18);border-radius:12px 12px 12px 2px;padding:.5rem .7rem;max-width:85%;color:#f2f2f7;}
+#ensAiInputRow{display:flex;gap:.5rem;padding:.6rem;border-top:1px solid rgba(255,255,255,.08);}
+#ensAiInput{flex:1;resize:none;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#f2f2f7;padding:.5rem .6rem;font-family:inherit;font-size:.8rem;}
+#ensAiSend{background:#6d5dfc;border:none;border-radius:10px;color:#fff;width:38px;font-size:1rem;cursor:pointer;}
 </style>
 </head><body>
 
@@ -21756,6 +21822,22 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     <button type="button" id="imgDeleteBtn" style="color:#ff6470;">🗑 Supprimer</button>
   </div>` : ''}
   <div id="content" ${isAdminUser109 ? 'contenteditable="true" spellcheck="false"' : ''}></div>
+</div>
+
+<button id="ensAiFab" title="Assistant IA du cours">✨</button>
+<div id="ensAiOverlay" class="hidden">
+  <div id="ensAiModal">
+    <div id="ensAiHead">
+      <span>✨ Assistant Enseignement</span>
+      <button id="ensAiClear" class="sp" title="Effacer l'historique">🗑</button>
+      <button id="ensAiClose" title="Fermer">✕</button>
+    </div>
+    <div id="ensAiBody"></div>
+    <div id="ensAiInputRow">
+      <textarea id="ensAiInput" rows="1" placeholder="Pose une question sur ce cours…"></textarea>
+      <button id="ensAiSend">➤</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"><\/script>
@@ -21919,6 +22001,126 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
     saveStatus.textContent = ''; saveStatus.classList.remove('saved');
     viewer.classList.add('show');
   }
+
+  /* =========================================================
+     ENSEIGNEMENT IA — branché sur le MÊME Worker Cloudflare que
+     Talco-Intelligence et Convert'AI (talco-itn-ai.natla-caxi.workers.dev) :
+     la clé API reste côté serveur, jamais exposée ici.
+     L'assistant récupère automatiquement en contexte la matière, la
+     séquence ouverte et le texte du cours affiché dans #content.
+  ========================================================= */
+  const ENS_AI_PROXY_URL = "https://talco-itn-ai.natla-caxi.workers.dev";
+  const ENS_AI_MODEL = "@cf/openai/gpt-oss-120b";
+  // Pool de 5 Workers identiques : répartit les ~100 utilisateurs et bascule
+  // automatiquement sur un autre Worker si le premier tiré est indisponible.
+  const AI_WORKERS = ["https://talco-itn-ai.natla-caxi.workers.dev", "https://talco-itn-ai.talcoitn.workers.dev", "https://talco-itn-ai.ota-claudeai.workers.dev", "https://talco-itn-ai.otu-claudeai.workers.dev", "https://talco-itn-ai.adf-aeroport-vlt.workers.dev"];
+  function pickWorkerOrder(){
+    const start = Math.floor(Math.random() * AI_WORKERS.length);
+    return AI_WORKERS.map((_, i) => AI_WORKERS[(start + i) % AI_WORKERS.length]);
+  }
+
+  function ensAiHistoryKey(){ return "talcoitn_ensai_" + (activeId || "global"); }
+
+  function ensAiGetContext(){
+    const m = matieres.find(x => x.id === activeId) || {};
+    const s = getSequences(m).find(x => x.id === activeSeqId);
+    const texte = (content.innerText || "").trim().slice(0, 4000);
+    let ctx = "Contexte : cours de \\"" + (m.titre || "") + "\\"";
+    if (s) ctx += ", séquence \\"" + (s.titre || "") + "\\"";
+    ctx += ". Voici le contenu affiché à l'élève : " + (texte || "(vide pour le moment)");
+    return ctx;
+  }
+
+  function ensAiSaveMsg(role, text){
+    const key = ensAiHistoryKey();
+    const saved = JSON.parse(localStorage.getItem(key) || "[]");
+    saved.push({role, text});
+    if (saved.length > 40) saved.splice(0, saved.length - 40);
+    localStorage.setItem(key, JSON.stringify(saved));
+  }
+
+  const ensAiOverlay = document.getElementById('ensAiOverlay');
+  const ensAiBody = document.getElementById('ensAiBody');
+  const ensAiInput = document.getElementById('ensAiInput');
+
+  function ensAiRenderHistory(){
+    const hist = JSON.parse(localStorage.getItem(ensAiHistoryKey()) || "[]");
+    ensAiBody.innerHTML = hist.length
+      ? hist.map(m => m.role === 'user'
+          ? '<div class="ens-bubble-user"><div class="who">Toi</div>' + m.text + '</div>'
+          : '<div class="ens-bubble-ai"><div class="who">✨ Assistant</div>' + m.text + '</div>').join('')
+      : '<div class="who">Pose une question sur le cours ouvert.</div>';
+    ensAiBody.scrollTop = ensAiBody.scrollHeight;
+  }
+
+  document.getElementById('ensAiFab').addEventListener('click', () => {
+    ensAiOverlay.classList.remove('hidden');
+    ensAiRenderHistory();
+    ensAiInput.focus();
+  });
+  document.getElementById('ensAiClose').addEventListener('click', () => ensAiOverlay.classList.add('hidden'));
+  document.getElementById('ensAiClear').addEventListener('click', () => {
+    localStorage.removeItem(ensAiHistoryKey());
+    ensAiRenderHistory();
+  });
+  ensAiOverlay.addEventListener('click', (e) => { if (e.target.id === 'ensAiOverlay') ensAiOverlay.classList.add('hidden'); });
+
+  async function ensAiSend(){
+    const msg = ensAiInput.value.trim();
+    if (!msg) return;
+    ensAiBody.innerHTML += '<div class="ens-bubble-user"><div class="who">Toi</div>' + msg + '</div>';
+    ensAiSaveMsg('user', msg);
+    ensAiInput.value = '';
+    const loadingId = 'ens_load_' + Date.now();
+    ensAiBody.innerHTML += '<div class="who" id="' + loadingId + '">✨ L\\'assistant réfléchit…</div>';
+    ensAiBody.scrollTop = ensAiBody.scrollHeight;
+    try {
+      const payload = {
+        model: ENS_AI_MODEL,
+        messages: [
+          { role: 'system', content: "Tu es l'assistant pédagogique de TalcoITN. Tu réponds en français, de façon claire et adaptée à un élève, en t'appuyant sur le contenu du cours fourni en contexte." },
+          { role: 'user', content: ensAiGetContext() + " Question : " + msg }
+        ]
+      };
+      const urlsToTry = pickWorkerOrder();
+      let data = null, lastErr = null;
+      for (const u of urlsToTry) {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000);
+        try {
+          const response = await fetch(u, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          if (response.status === 429 || response.status === 503) { lastErr = new Error("Worker occupé (" + response.status + ")"); continue; }
+          const j = await response.json();
+          if (j.error) { lastErr = new Error(j.error.message || j.error); continue; }
+          data = j; break;
+        } catch (err) { clearTimeout(timeoutId); lastErr = err; continue; }
+      }
+      document.getElementById(loadingId)?.remove();
+      if (!data) {
+        ensAiBody.innerHTML += '<div class="who" style="color:#ff6470;">Erreur : ' + (lastErr?.message || "tous les Workers sont indisponibles.") + '</div>';
+      } else {
+        const answer = data.choices?.[0]?.message?.content ?? data.response ?? data.result?.response ?? "Pas de réponse reçue.";
+        const clean = answer.replace(/\\n/g, '<br>');
+        ensAiBody.innerHTML += '<div class="ens-bubble-ai"><div class="who">✨ Assistant</div>' + clean + '</div>';
+        ensAiSaveMsg('ai', clean);
+      }
+    } catch (err) {
+      document.getElementById(loadingId)?.remove();
+      const msgErr = err.name === 'AbortError' ? "Le serveur a mis trop de temps à répondre (30s) — réessaie." : err.message;
+      ensAiBody.innerHTML += '<div class="who" style="color:#ff6470;">Erreur réseau : ' + msgErr + '</div>';
+    }
+    ensAiBody.scrollTop = ensAiBody.scrollHeight;
+  }
+  document.getElementById('ensAiSend').addEventListener('click', ensAiSend);
+  ensAiInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ensAiSend(); }
+  });
 
   ${isAdminUser109 ? `
   // ---------- Édition (admin uniquement) ----------
