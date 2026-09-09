@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -3193,10 +3194,10 @@ button,input,textarea{font-family:var(--font);}
 /* WhatsApp-style bubble: hugs content, capped width, never stretches the row */
 .bubble{
   display:inline-block;
-  max-width:min(72%,480px);
+  max-width:min(65%,420px);
   min-width:0;
   width:fit-content;
-  padding:7px 10px 8px;
+  padding:6px 10px 7px;
   border-radius:16px;
   font-size:14.5px;line-height:1.4;
   word-break:break-word;overflow-wrap:break-word;
@@ -3208,9 +3209,9 @@ button,input,textarea{font-family:var(--font);}
 .msg-row.me{justify-content:flex-start;}
 .msg-row.me > div{margin-left:auto;}
 .msg-row.me .bubble{
-  background:linear-gradient(135deg,var(--a1),#818cf8);
+  background:linear-gradient(135deg,var(--a1),#7c86f0);
   color:#fff;border-bottom-right-radius:4px;
-  box-shadow:0 3px 10px rgba(99,102,241,.25);
+  box-shadow:0 2px 6px rgba(99,102,241,.18);
 }
 .msg-row.them .bubble{
   background:var(--p3);color:var(--text);
@@ -3513,7 +3514,7 @@ button,input,textarea{font-family:var(--font);}
     width:34px;height:34px;font-size:19px;
     color:var(--text);
   }
-  .bubble{max-width:82%;}
+  .bubble{max-width:75%;}
   #chat-header{padding:10px 10px;}
   .conv-last{max-width:60vw;}
 }
@@ -18398,11 +18399,6 @@ p{color:#8a8aa0;font-size:.82rem;padding:2rem;text-align:center;}
 <html lang="fr">
 <head>
 <meta charset="UTF-8"/>
-<!-- This site is hosted on Netlify. Anyone can build and deploy a site
-     like this one for free: https://netlify.new/?utm_campaign=ai-legible&utm_source=comment&utm_medium=referral&utm_id=0f47659f-8aa1-4715-9e0f-5d02ef07f94d
-     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
-<meta name="hosting-provider" content="Netlify">
-<meta name="netlify-deploy" content="https://netlify.new/?utm_campaign=ai-legible&amp;utm_source=meta&amp;utm_medium=referral&amp;utm_id=0f47659f-8aa1-4715-9e0f-5d02ef07f94d">
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Talco-Intelligence</title>
 <link rel="icon" type="image/png" sizes="64x64" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAADoUlEQVR4nOWbv27UQBDGv1lfQUVBQcUbUUBBQQN3l0SCoAgREAEKHoAGKSFEUYKACCGlIOKPCIKnQaAgIlAo0gBC8VA49q3t9Xnt2x0n9tfkznLO+9uZnVnP2HTu/l8QM4gBApK/KvOdGFAA25wXHWfT/5uvY75W7d8kBhVeK3O8ZwHPYwd/9OCzhqIxBoVqIXz2OBfBE4foFUBx6eCPB3w81tgjSIcn8MgDWgyvH2cdnhBCdQg+tjwn8MxQxSe2Eh46fOIBLQp4tvBMSMeALsHjEJ6JNQ/oGDyIQ6jYA7oKTwihjtH21jk8MXPZTtA7/L3FoCl4REGwYcsDDcIjNO4ExeDvLgYAgIWloBF4Ys7tBEXXvK4m4KMg2BD8naUgPQENwOdigGS0z2p+OZCH12OAJPxCxvr6MpCET2KAJHx27euShqd0FpDb5BRpbiWQhUeSBeTgbz0yu38sSXjiEEp6e1um2dVADN6YBXzC31web/3EC4TgUzVB3/Cm1Fc4AVLwVvUAR/DzltYHgJm1QAQ+8QCJW9qqkoAnhOgdJcvrGqwHAAK8mPnjDZ6Y0Wsi1VXRpScnks+bU/tO4RVMnaEJ4G87BDfp4tOTAIBXw19O4AmaB/jY2/vShWenAABvBj8mgk96g5MUM5rU+eenk8/b/Z3K8ARGr04N7yjq7MYZAMCny5+t4aMYUNHyD64fiK15W33of61s+VEMQP1o/3BuNBk3HstOxvvBt1prXofPpcFJ6vZL1w6gEN3S+tS7wffaAS8Ln0qDrpoWK7MHyfGrq24mw0W0N8EnadBXx2b9ymgypteqTcbWcM9Jnh8HH9UDPMFnz6sqCfjc7bAveAVgY+afNfzr4U8ZeIT1iqJV4eML2koKPqoKC8ETQryc/m03AULw2kNS/uHjW9oyvR3sisET2L4o6gKewNic2i+xviA8h3ZFUVfwcTGjSK43OWXwuSwg1aIukjR8NAHC8MSMreGe2f2F4aOnxITh40FlVfd+fiJ4sHkn6BuemPF2sJu2fgPwqeaoJHx8Tnr9y8OnYoA0vEKI7f4OAOBj/0sz8BxatsY8wMffkfotWfjSLCDRpa1aw3MJH8cA6xeMpNpVUvDETAX1gE7AQ5myQJfg9Rgw9tWylsJTph4QTUKX4LV6QKcsnxpX9lHZ3Ht1LYQnfVymnSB1BZ5g7AwdrpEInlsCT+Zx5R6SylmeWg3Pqc5QoduT/o7NMYEnU8AzMf4HS9NDmMUYf7cAAAAASUVORK5CYII="/>
@@ -18412,7 +18408,7 @@ p{color:#8a8aa0;font-size:.82rem;padding:2rem;text-align:center;}
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <meta name="apple-mobile-web-app-title" content="Talco"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -18425,7 +18421,7 @@ p{color:#8a8aa0;font-size:.82rem;padding:2rem;text-align:center;}
   --sidebar-w:260px;
 }
 html,body{height:100%;overflow:hidden}
-body{font-family:'Inter',sans-serif;color:var(--text);display:flex;flex-direction:column;position:relative;}
+body{font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);display:flex;flex-direction:column;position:relative;}
 
 #intro-screen{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;animation:introFade 1s ease 0.6s forwards;pointer-events:none;}
 @keyframes introFade{0%{opacity:1}100%{opacity:0;visibility:hidden}}
@@ -18458,7 +18454,7 @@ body{font-family:'Inter',sans-serif;color:var(--text);display:flex;flex-directio
 .history-item:hover{background:rgba(255,255,255,.05);border-color:var(--border);}
 .history-item.active{background:rgba(110,168,254,.08);border-color:rgba(110,168,254,.2);}
 .history-item-icon{font-size:.85rem;opacity:.6;flex-shrink:0;}
-.history-item-text{flex:1;font-size:.78rem;color:var(--soft);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.history-item-text{flex:1;font-size:.8rem;color:#c3cbe0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
 .history-item.active .history-item-text{color:var(--blue);}
 .history-del{opacity:0;font-size:.75rem;color:var(--muted);padding:.15rem .35rem;border-radius:4px;transition:all .2s;flex-shrink:0;cursor:pointer;line-height:1;}
 .history-item:hover .history-del{opacity:1;}
@@ -18578,7 +18574,12 @@ header{
 .msg.ai .av{background:var(--grad);}
 .msg.user .av{background:rgba(110,168,254,.12);border:1px solid rgba(110,168,254,.2);}
 .av svg{width:15px;height:15px;}
-.bubble{max-width:82%;padding:.85rem 1.05rem;border-radius:16px;font-size:.9rem;line-height:1.75;word-break:break-word;}
+.bubble{max-width:82%;padding:.9rem 1.15rem;border-radius:16px;font-size:.94rem;line-height:1.8;letter-spacing:-.005em;word-break:break-word;}
+.bubble table.md-table{width:100%;border-collapse:collapse;margin:.7rem 0;font-size:.85rem;}
+.bubble table.md-table th,.bubble table.md-table td{border:1px solid var(--border);padding:.45rem .7rem;text-align:left;}
+.bubble table.md-table th{background:rgba(255,255,255,.06);font-family:'Space Grotesk',sans-serif;font-weight:600;}
+.bubble a{color:#6ea8fe;text-decoration:underline;text-underline-offset:2px;word-break:break-all;}
+.bubble a:hover{color:#a78bfa;}
 .msg.ai .bubble{background:rgba(13,17,32,.9);border:1px solid var(--border);border-top-left-radius:4px;backdrop-filter:blur(12px);}
 .msg.user .bubble{background:rgba(110,168,254,.1);border:1px solid rgba(110,168,254,.18);border-top-right-radius:4px;color:#c7deff;}
 .bubble p{margin:.3rem 0;}.bubble p:first-child{margin-top:0;}.bubble p:last-child{margin-bottom:0;}
@@ -18631,7 +18632,7 @@ header{
 .img-preview{position:relative;display:none;flex-shrink:0;}
 .img-preview img{width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block;}
 .img-preview-del{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:var(--red);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#fff;line-height:1;}
-textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Inter',sans-serif;font-size:.9rem;line-height:1.55;resize:none;min-height:36px;max-height:140px;vertical-align:bottom;}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:.9rem;line-height:1.55;resize:none;min-height:36px;max-height:140px;vertical-align:bottom;}
 textarea::placeholder{color:var(--muted);}
 .input-actions{display:flex;align-items:center;gap:.4rem;flex-shrink:0;}
 .send-btn{width:36px;height:36px;flex-shrink:0;border-radius:10px;border:none;cursor:pointer;background:var(--grad);display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s,box-shadow .2s;}
@@ -18666,7 +18667,7 @@ kbd{padding:.1rem .28rem;border-radius:4px;background:rgba(255,255,255,.05);bord
 .model-api-grid{display:flex;flex-direction:column;gap:.5rem;margin-top:.5rem;}
 .model-api-row{display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:.6rem .8rem;flex-wrap:wrap;}
 .model-api-provider{font-size:.7rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;min-width:78px;flex-shrink:0;}
-.model-api-select{flex:1;min-width:120px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:.8rem;padding:.3rem .5rem;outline:none;cursor:pointer;transition:border-color .2s;font-family:'Inter',sans-serif;}
+.model-api-select{flex:1;min-width:120px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:7px;color:var(--text);font-size:.8rem;padding:.3rem .5rem;outline:none;cursor:pointer;transition:border-color .2s;font-family:'Plus Jakarta Sans',sans-serif;}
 .model-api-select:focus{border-color:rgba(110,168,254,.4);}
 .model-api-select option{background:#0d1120;color:var(--text);}
 .model-api-apply{padding:.3rem .7rem;border-radius:7px;border:1px solid rgba(110,168,254,.3);background:rgba(110,168,254,.08);color:var(--blue);font-size:.75rem;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;}
@@ -18825,11 +18826,20 @@ const PROXY_URL='https://talco-itn-ai.natla-caxi.workers.dev';
 const NEWS_PROXY_URL='https://talco-intelligence.natla-caxi.workers.dev';
 const NEWS_MODEL='openai/gpt-oss-120b'; // ID valide côté OpenRouter (sans le préfixe @cf/, réservé à Cloudflare Workers AI)
 let newsMode=(localStorage.getItem('talco_news_mode')==='1');
-function getActiveProxyUrl(){return newsMode?NEWS_PROXY_URL:PROXY_URL;}
+let webSearchMode=(localStorage.getItem('talco_websearch_mode')==='1');
+// En mode normal + case "Recherche web" cochée, on route quand même vers le proxy actu (seul à savoir faire une recherche web),
+// mais SANS changer de modèle affiché : le plugin web OpenRouter est ajouté côté worker.
+function getActiveProxyUrl(){return (newsMode||webSearchMode)?NEWS_PROXY_URL:PROXY_URL;}
 function toggleNewsMode(){
   newsMode=!newsMode;
   localStorage.setItem('talco_news_mode',newsMode?'1':'0');
   setApiStatus('ok',(newsMode?'📰 Mode actualité':getModel().split('/').pop().substring(0,24)));
+  document.getElementById('tabContent').innerHTML=buildModelsTab();
+}
+function toggleWebSearch(){
+  webSearchMode=!webSearchMode;
+  localStorage.setItem('talco_websearch_mode',webSearchMode?'1':'0');
+  setApiStatus('ok',(webSearchMode?'🌐 Web activé':getModel().split('/').pop().substring(0,24)));
   document.getElementById('tabContent').innerHTML=buildModelsTab();
 }
 const MODELS={
@@ -18890,8 +18900,10 @@ function renderHistory(){
   const list=document.getElementById('historyList');
   const empty=document.getElementById('historyEmpty');
   Array.from(list.children).forEach(el=>{if(el!==empty)el.remove();});
-  if(!storageOK){empty.innerHTML='Stockage local bloqué.<br>Ouvre ce fichier via un vrai serveur<br>(pas en double-clic) pour garder<br>l\\'historique.';empty.style.display='block';return;}
-  if(!conversations.length){empty.style.display='block';return;}
+  if(!conversations.length){
+    empty.innerHTML=storageOK?'Aucune conversation<br>pour l\\'instant.':'Stockage local bloqué : l\\'historique ne sera<br>pas gardé après fermeture,<br>mais tes conversations restent<br>visibles ici pendant cette session.';
+    empty.style.display='block';return;
+  }
   empty.style.display='none';
   const now=Date.now();
   const todayC=conversations.filter(c=>(now-c.ts)<86400000);
@@ -19000,10 +19012,21 @@ function addLog(text,status){
 }
 function renderMD(text){
   if(!text)return'';
+  text=text.replace(/\\r\\n/g,'\\n').replace(/\\r/g,'\\n');
   const mathBlocks=[];
+  text=text.replace(/\\\\\\[([\\s\\S]+?)\\\\\\]/g,(m,tex)=>{
+    let html;try{html=katex.renderToString(tex.trim(),{displayMode:true,throwOnError:false});}catch(e){html=escHtml(m);}
+    mathBlocks.push(\`<div class="math-block">\${html}</div>\`);
+    return\`\\x00MATH\${mathBlocks.length-1}\\x00\`;
+  });
   text=text.replace(/\\$\\$([\\s\\S]+?)\\$\\$/g,(m,tex)=>{
     let html;try{html=katex.renderToString(tex.trim(),{displayMode:true,throwOnError:false});}catch(e){html=escHtml(m);}
     mathBlocks.push(\`<div class="math-block">\${html}</div>\`);
+    return\`\\x00MATH\${mathBlocks.length-1}\\x00\`;
+  });
+  text=text.replace(/\\\\\\(([\\s\\S]+?)\\\\\\)/g,(m,tex)=>{
+    let html;try{html=katex.renderToString(tex.trim(),{displayMode:false,throwOnError:false});}catch(e){html=escHtml(m);}
+    mathBlocks.push(\`<span class="math-inline">\${html}</span>\`);
     return\`\\x00MATH\${mathBlocks.length-1}\\x00\`;
   });
   text=text.replace(/(?<!\\\\)\\$([^\\n$]+?)(?<!\\\\)\\$/g,(m,tex)=>{
@@ -19018,9 +19041,20 @@ function renderMD(text){
     return\`\\x00CODE\${codeBlocks.length-1}\\x00\`;
   });
   text=text.replace(/\`([^\`\\n]+)\`/g,(m,c)=>\`<code>\${escHtml(c)}</code>\`);
+  const tableBlocks=[];
+  text=text.replace(/^\\|(.+)\\|[ \\t]*\\n\\|[ \\t:|-]+\\|[ \\t]*\\n((?:\\|.*\\|[ \\t]*\\n?)*)/gm,(m,headerLine,bodyLines)=>{
+    const heads=headerLine.split('|').map(s=>s.trim()).filter(s=>s.length);
+    const rows=bodyLines.trim().split('\\n').filter(r=>r.trim()).map(r=>r.split('|').map(s=>s.trim()).filter((s,i,a)=>!(i===0&&s==='')&&!(i===a.length-1&&s==='')));
+    let html='<table class="md-table"><thead><tr>'+heads.map(h=>\`<th>\${h}</th>\`).join('')+'</tr></thead><tbody>';
+    rows.forEach(r=>{html+='<tr>'+r.map(c=>\`<td>\${c}</td>\`).join('')+'</tr>';});
+    html+='</tbody></table>';
+    tableBlocks.push(html);
+    return\`\\x00TABLE\${tableBlocks.length-1}\\x00\\n\`;
+  });
   text=text.replace(/^### (.+)$/gm,'<h3>$1</h3>');
   text=text.replace(/^## (.+)$/gm,'<h2>$1</h2>');
   text=text.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+  text=text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
   text=text.replace(/\\*\\*(.+?)\\*\\*/g,'<strong>$1</strong>');
   text=text.replace(/\\*(.+?)\\*/g,'<em>$1</em>');
   text=text.replace(/^[\\-\\*] (.+)$/gm,'<li>$1</li>');
@@ -19030,13 +19064,14 @@ function renderMD(text){
   for(const line of lines){
     const trimmed=line.trim();
     if(!trimmed){if(buf.length){result.push('<p>'+buf.join(' ')+'</p>');buf=[];}}
-    else if(blockTags.test(trimmed)||trimmed.startsWith('\\x00CODE')||trimmed.startsWith('\\x00MATH')){if(buf.length){result.push('<p>'+buf.join(' ')+'</p>');buf=[];}result.push(trimmed);}
+    else if(blockTags.test(trimmed)||trimmed.startsWith('\\x00CODE')||trimmed.startsWith('\\x00MATH')||trimmed.startsWith('\\x00TABLE')){if(buf.length){result.push('<p>'+buf.join(' ')+'</p>');buf=[];}result.push(trimmed);}
     else{buf.push(trimmed);}
   }
   if(buf.length)result.push('<p>'+buf.join(' ')+'</p>');
   text=result.join('\\n');
   text=text.replace(/\\x00CODE(\\d+)\\x00/g,(_,i)=>codeBlocks[parseInt(i)]);
   text=text.replace(/\\x00MATH(\\d+)\\x00/g,(_,i)=>mathBlocks[parseInt(i)]);
+  text=text.replace(/\\x00TABLE(\\d+)\\x00/g,(_,i)=>tableBlocks[parseInt(i)]);
   return text;
 }
 async function sendMessage(){
@@ -19066,15 +19101,41 @@ async function sendMessage(){
 async function callOpenRouter(text,img,model){
   const userContent=[];if(text)userContent.push({type:'text',text});if(img)userContent.push({type:'image_url',image_url:{url:\`data:\${img.type};base64,\${img.base64}\`}});
   const todayStr=new Date().toLocaleDateString('fr-FR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  const history=(currentMessages||[]).slice(-11,-1);const messages=[{role:'system',content:\`Nous sommes aujourd'hui le \${todayStr}. Utilise cette date réelle si on te demande la date ou l'heure, même si tes connaissances s'arrêtent avant. Réponds toujours en français par défaut, sauf si l'utilisateur écrit clairement dans une autre langue — dans ce cas, réponds dans sa langue.\`}];
+  const history=(currentMessages||[]).slice(-11,-1);const messages=[{role:'system',content:\`Nous sommes aujourd'hui le \${todayStr}. Utilise cette date réelle si on te demande la date ou l'heure, même si tes connaissances s'arrêtent avant. Réponds toujours en français par défaut, sauf si l'utilisateur écrit clairement dans une autre langue — dans ce cas, réponds dans sa langue.
+
+Quand la question porte sur les mathématiques ou la physique-chimie de niveau lycée (1ère spécialité), utilise systématiquement et cite précisément les formules du programme officiel français, notamment :
+
+MATHS 1ère SPÉ — à connaître par cœur et utiliser :
+- Second degré : forme canonique ax²+bx+c = a(x - α)² + β avec α = -b/(2a) ; discriminant Δ = b² - 4ac ; racines x = (-b ± √Δ)/(2a)
+- Suites : arithmétique u_(n+1) = u_n + r, terme général u_n = u_0 + nr, somme des n premiers termes = n(u_0+u_(n-1))/2 ; géométrique u_(n+1) = q·u_n, terme général u_n = u_0·q^n, somme = u_0(1-q^n)/(1-q) si q≠1
+- Dérivation : (u+v)' = u'+v' ; (uv)' = u'v+uv' ; (u/v)' = (u'v-uv')/v² ; (u∘v)' = v'·u'∘v ; dérivées usuelles x^n → nx^(n-1), √x → 1/(2√x), 1/x → -1/x²
+- Exponentielle : (e^x)' = e^x, e^(a+b)=e^a·e^b, e^(-a)=1/e^a
+- Produit scalaire : u·v = ||u||·||v||·cos(θ) = x x' + y y' ; formule d'Al-Kashi a² = b²+c²-2bc·cos(Â)
+- Trigonométrie : cos²x+sin²x=1 ; formules d'addition cos(a+b)=cos a cos b - sin a sin b, sin(a+b)=sin a cos b + cos a sin b
+- Probabilités conditionnelles : P_B(A) = P(A∩B)/P(B) ; formule des probabilités totales
+
+PHYSIQUE-CHIMIE 1ère SPÉ — à connaître par cœur et utiliser :
+- Mécanique : 2e loi de Newton ΣF = m·a ; poids P = m·g ; énergie cinétique Ec = ½mv² ; énergie potentielle de pesanteur Epp = m·g·h ; travail d'une force W(F) = F·d·cos(θ)
+- Électricité : loi d'Ohm U = R·I ; puissance P = U·I = R·I² = U²/R ; loi des mailles, loi des nœuds
+- Ondes : célérité v = λ/T = λ·f ; relation fondamentale de la diffraction θ = λ/a
+- Chimie : quantité de matière n = m/M = C·V ; concentration molaire C = n/V ; conservation de la matière lors des dilutions C1V1 = C2V2 ; loi de Beer-Lambert A = ε·l·C
+- Réactions acido-basiques : pH = -log[H3O+]
+
+Donne toujours les unités SI, et présente les formules importantes en LaTeX (avec $ ou \\\\( \\\\)) pour un rendu propre.\`}];
   history.forEach(m=>{messages.push({role:m.role==='ai'?'assistant':'user',content:m.text||''});});
   messages.push({role:'user',content:img?userContent:(text||'')});
   try{
-    const res=await fetch(getActiveProxyUrl(),{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:newsMode?NEWS_MODEL:model,messages,temperature:0.9,max_tokens:2048})
-    });
+    const controller=new AbortController();
+    const timeoutId=setTimeout(()=>controller.abort(),30000);
+    let res;
+    try{
+      res=await fetch(getActiveProxyUrl(),{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:newsMode?NEWS_MODEL:(webSearchMode?model.replace(/^@cf\//,''):model),messages,temperature:0.9,max_tokens:3072}),
+        signal:controller.signal
+      });
+    }finally{clearTimeout(timeoutId);}
     const data=await res.json();
     if(data.error)throw new Error(data.error.message||data.error||'Erreur API');
     // Deux formats possibles selon le Worker actif :
@@ -19082,6 +19143,7 @@ async function callOpenRouter(text,img,model){
     // - talco-itn-ai (Workers AI brut)  : {response:"..."} directement à la racine
     return data.choices?.[0]?.message?.content ?? data.response ?? data.result?.response ?? 'Pas de réponse.';
   }catch(e){
+    if(e.name==='AbortError')throw new Error('Le serveur a mis trop de temps à répondre (30s) — réessaie, ou désactive la recherche web si le souci persiste.');
     throw new Error(\`Échec de l'appel au serveur proxy. \${e.message||''}\`);
   }
 }
@@ -19136,8 +19198,12 @@ function buildModelsTab(){
   <input type="checkbox" id="newsModeToggle" \${newsMode?'checked':''} onchange="toggleNewsMode()" style="width:38px;height:20px;accent-color:var(--purp,#6d5dfc);cursor:pointer;">
   <span style="font-size:.82rem;color:#c9c9e0;">\${newsMode?'Activé — réponses via talco-intelligence':'Désactivé — réponses via talco-itn-ai (normal)'}</span>
 </label>
+<label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;margin-top:.6rem;\${newsMode?'opacity:.4;pointer-events:none;':''}">
+  <input type="checkbox" id="webSearchToggle" \${webSearchMode?'checked':''} onchange="toggleWebSearch()" style="width:38px;height:20px;accent-color:var(--purp,#6d5dfc);cursor:pointer;">
+  <span style="font-size:.82rem;color:#c9c9e0;">🌐 Recherche web (mode normal) — \${webSearchMode?'Activée':'Désactivée'}</span>
+</label>
 </div>
-<div class="modal-section"><h3>📌 Modèle actif</h3><div class="model-current-box"><p>Provider : <strong style="color:var(--blue)">🟠 Cloudflare Workers AI</strong></p><p>Modèle : <strong style="color:var(--purp)">\${activeModel}</strong></p><p>Worker : <strong style="color:var(--purp)">\${newsMode?'talco-intelligence (actualité)':'talco-itn-ai (normal)'}</strong></p></div></div>\`;
+<div class="modal-section"><h3>📌 Modèle actif</h3><div class="model-current-box"><p>Provider : <strong style="color:var(--blue)">🟠 Cloudflare Workers AI</strong></p><p>Modèle : <strong style="color:var(--purp)">\${activeModel}</strong></p><p>Worker : <strong style="color:var(--purp)">\${newsMode?'talco-intelligence (actualité)':(webSearchMode?'talco-intelligence (normal + 🌐 web)':'talco-itn-ai (normal)')}</strong></p></div></div>\`;
 }
 function applyModel(provider){
   const sel=document.getElementById('modalOrSelect');
@@ -19582,13 +19648,14 @@ footer b{color:var(--phosphor);}
 .ai-modal-head .ai-sub{ color:var(--text-dim); font-size:0.7rem; letter-spacing:0.03em; }
 .ai-modal-head button{ background:var(--bg-2); border:1px solid var(--grid); border-radius:14px; width:32px; height:32px; color:var(--text-dim); font-size:1rem; cursor:pointer; transition:all .15s; }
 .ai-modal-head button:hover{ color:var(--red); border-color:var(--red); }
-.ai-modal-body{ padding:20px 22px; overflow-y:auto; font-size:0.9rem; line-height:1.7; white-space:pre-wrap; }
+.ai-modal-head{ font-family:'Inter',sans-serif; }
+.ai-modal-body{ padding:20px 22px; overflow-y:auto; font-size:0.92rem; line-height:1.75; white-space:pre-wrap; font-family:'Inter',sans-serif; }
 .ai-modal-body .ai-context{
   font-size:0.74rem; color:var(--text-dim); background:var(--bg-2); border:1px solid var(--grid);
   border-radius:16px; padding:12px 14px; margin-bottom:16px; white-space:pre-wrap; border-left:3px solid var(--cyan);
 }
-.ai-bubble-user{ background:rgba(79,210,255,0.08); border:1px solid rgba(79,210,255,0.25); border-radius:18px 12px 4px 12px; padding:10px 14px; margin:10px 0 6px auto; max-width:85%; font-size:0.86rem; }
-.ai-bubble-ai{ background:rgba(185,140,255,0.07); border:1px solid rgba(185,140,255,0.22); border-radius:18px 12px 12px 4px; padding:12px 16px; margin:6px auto 14px 0; max-width:92%; font-size:0.88rem; }
+.ai-bubble-user{ display:table; width:fit-content; background:rgba(79,210,255,0.08); border:1px solid rgba(79,210,255,0.25); border-radius:18px 12px 4px 12px; padding:10px 14px; margin:10px 0 6px auto; max-width:85%; font-size:0.86rem; word-break:break-word; overflow-wrap:break-word; }
+.ai-bubble-ai{ display:table; width:fit-content; background:rgba(185,140,255,0.07); border:1px solid rgba(185,140,255,0.22); border-radius:18px 12px 12px 4px; padding:12px 16px; margin:6px auto 14px 0; max-width:92%; font-size:0.88rem; word-break:break-word; overflow-wrap:break-word; }
 .ai-bubble-ai .who{ color:var(--violet); font-weight:700; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
 .ai-bubble-user .who{ color:var(--cyan); font-weight:700; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:4px; text-align:right; }
 .ai-modal-foot{ padding:16px 22px; border-top:1px solid var(--grid); display:flex; gap:10px; background:rgba(255,255,255,0.01); }
@@ -19654,6 +19721,7 @@ footer b{color:var(--phosphor);}
         <div class="ai-avatar">✨</div>
         <div><b>Convert'AI</b><div class="ai-sub">Assistant scientifique — propulsé par OpenRouter</div></div>
       </div>
+      <button id="aiModalClear" title="Effacer l'historique" style="margin-right:8px;">🗑</button>
       <button id="aiModalClose">✕</button>
     </div>
     <div class="ai-modal-body" id="aiModalBody">
@@ -20805,12 +20873,25 @@ function openAIModal(prefillContext){
   const overlay = document.getElementById('aiModalOverlay');
   const body = document.getElementById('aiModalBody');
   overlay.classList.remove('hidden');
-  if(prefillContext){
+  const saved = JSON.parse(localStorage.getItem('convertai_history')||'[]');
+  if(saved.length){
+    body.innerHTML = saved.map(m=>m.role==='user'
+      ? \`<div class="ai-bubble-user"><div class="who">Toi</div>\${m.text}</div>\`
+      : \`<div class="ai-bubble-ai"><div class="who">✨ Convert'AI</div>\${m.text}</div>\`).join('');
+    if(prefillContext) body.innerHTML += \`<div class="ai-context"><b>Contexte transmis à Convert'AI :</b>\\n\${prefillContext}</div>\`;
+  } else if(prefillContext){
     body.innerHTML = \`<div class="ai-context"><b>Contexte transmis à Convert'AI :</b>\\n\${prefillContext}</div>\`;
   } else {
     body.innerHTML = \`<div class="small-note">Pose ta question à Convert'AI.</div>\`;
   }
+  body.scrollTop = body.scrollHeight;
   document.getElementById('aiModalInput').focus();
+}
+function aiSaveMsg(role,text){
+  const saved = JSON.parse(localStorage.getItem('convertai_history')||'[]');
+  saved.push({role,text});
+  if(saved.length>40) saved.splice(0,saved.length-40);
+  localStorage.setItem('convertai_history', JSON.stringify(saved));
 }
 
 function askAIAbout(key){
@@ -20821,6 +20902,10 @@ function askAIAbout(key){
 document.getElementById('aiFab').addEventListener('click', ()=> openAIModal(""));
 document.getElementById('aiModalClose').addEventListener('click', ()=>{
   document.getElementById('aiModalOverlay').classList.add('hidden');
+});
+document.getElementById('aiModalClear').addEventListener('click', ()=>{
+  localStorage.removeItem('convertai_history');
+  document.getElementById('aiModalBody').innerHTML = '<div class="small-note">Historique effacé. Pose ta question à Convert\\'AI.</div>';
 });
 document.getElementById('aiModalOverlay').addEventListener('click', (e)=>{
   if(e.target.id==='aiModalOverlay') document.getElementById('aiModalOverlay').classList.add('hidden');
@@ -20857,6 +20942,7 @@ async function sendToOpenRouter(userMessage, context){
     } else {
       const answer = data.choices?.[0]?.message?.content || "Pas de réponse reçue.";
       body.innerHTML += \`<div class="ai-bubble-ai"><div class="who">✨ Convert'AI</div>\${answer.replace(/\\n/g,'<br>')}</div>\`;
+      aiSaveMsg('ai', answer.replace(/\\n/g,'<br>'));
     }
   } catch(err){
     document.getElementById(loadingId)?.remove();
@@ -20871,6 +20957,7 @@ document.getElementById('aiModalSend').addEventListener('click', ()=>{
   if(!msg) return;
   const body = document.getElementById('aiModalBody');
   body.innerHTML += \`<div class="ai-bubble-user"><div class="who">Toi</div>\${msg}</div>\`;
+  aiSaveMsg('user', msg);
   sendToOpenRouter(msg, aiCurrentContext);
   aiCurrentContext = ""; // le contexte n'est transmis qu'au premier message
   input.value = '';
@@ -20893,17 +20980,14 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
 </body></html>`;
             }
 
-            // Module Google/Recherche : les résultats s'affichent DIRECTEMENT dans ITN
-            // via un Worker Cloudflare qui interroge l'API Brave Search (Google lui-même
-            // reste impossible à embarquer — X-Frame-Options côté serveur Google, non
-            // contournable côté client, cf. commentaire précédent conservé ci-dessous
-            // pour mémoire). Le Worker cache la clé API et renvoie du JSON, donc aucune
-            // restriction d'affichage ne s'applique : on construit nous-mêmes la page
-            // de résultats avec le style TalcoITN.
-            //
-            // IMPORTANT : remplace SEARCH_WORKER_URL par l'URL de TON Worker déployé
-            // (voir talco-search-worker.js) avant de publier, sinon la recherche ne
-            // fonctionnera pas.
+            // Module Google/Recherche : Google s'exécute DIRECTEMENT dans ITN via un
+            // <iframe> pointant sur www.google.com/search?igu=1 — le paramètre "igu"
+            // (Interstitial Google Universal / "iframe google usage") est celui que
+            // Google utilise pour son propre widget de recherche embarquable et
+            // désactive le blocage X-Frame-Options habituel sur la page de résultats.
+            // Plus de Worker externe, plus de clé API, plus de JSON à parser : c'est
+            // vraiment Google qui tourne dans la carte ITN. Un bouton "Ouvrir dans un
+            // onglet" reste affiché au cas où Google changerait cette règle un jour.
             if (modId === 'google') {
                 const q = pendingGoogleQuery; pendingGoogleQuery = null;
                 const qJson = JSON.stringify(q || '');
@@ -20911,100 +20995,75 @@ document.getElementById('aiModalInput').addEventListener('keydown', e=>{
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
   *{margin:0;padding:0;box-sizing:border-box;}
-  html,body{height:100%;background:#08080d;font-family:'Inter',-apple-system,sans-serif;color:#f2f2f7;}
-  body{display:flex;flex-direction:column;align-items:center;padding:2rem 1.2rem;overflow-y:auto;}
-  .g-logo{font-family:'Sora',-apple-system,sans-serif;font-weight:800;font-size:1.7rem;margin-bottom:1.2rem;letter-spacing:-.02em;flex:0 0 auto;
+  html,body{height:100%;background:#08080d;font-family:'Inter',-apple-system,sans-serif;color:#f2f2f7;overflow:hidden;}
+  .g-wrap{display:flex;flex-direction:column;height:100%;}
+  .g-top{flex:0 0 auto;padding:.9rem 1rem .7rem;display:flex;align-items:center;gap:.6rem;border-bottom:1px solid rgba(255,255,255,.08);}
+  .g-logo{font-family:'Sora',-apple-system,sans-serif;font-weight:800;font-size:1.1rem;letter-spacing:-.02em;flex:0 0 auto;
     background:linear-gradient(90deg,#4f7cff,#ff5fa8,#ffc247,#4f7cff);background-size:300% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
     animation:shine 6s linear infinite;}
   @keyframes shine{to{background-position:300% center;}}
-  .g-row{width:100%;max-width:620px;display:flex;align-items:center;gap:.6rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:.2rem .3rem .2rem 1rem;transition:border-color .2s;flex:0 0 auto;}
+  .g-row{flex:1;min-width:0;display:flex;align-items:center;gap:.5rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:.15rem .3rem .15rem .8rem;transition:border-color .2s;}
   .g-row:focus-within{border-color:rgba(79,124,255,.6);}
   .g-row svg{flex:0 0 auto;opacity:.5;}
-  .g-row input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#f2f2f7;font-size:.95rem;padding:.7rem 0;}
+  .g-row input{flex:1;min-width:0;background:transparent;border:none;outline:none;color:#f2f2f7;font-size:.88rem;padding:.55rem 0;}
   .g-row input::placeholder{color:#67677a;}
-  .g-row button{flex:0 0 auto;background:linear-gradient(135deg,#4f7cff,#ffc247);border:none;border-radius:10px;padding:.65rem 1.1rem;color:#fff;font-weight:700;font-size:.8rem;cursor:pointer;transition:transform .15s;}
+  .g-row button{flex:0 0 auto;background:linear-gradient(135deg,#4f7cff,#ffc247);border:none;border-radius:8px;padding:.5rem .9rem;color:#fff;font-weight:700;font-size:.74rem;cursor:pointer;transition:transform .15s;}
   .g-row button:active{transform:scale(.94);}
-  .g-status{font-size:.72rem;color:#67677a;margin-top:.8rem;text-align:center;}
-  .g-results{width:100%;max-width:620px;margin-top:1.2rem;display:flex;flex-direction:column;gap:.9rem;padding-bottom:2rem;}
-  .g-item{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:.9rem 1.05rem;transition:border-color .15s;}
-  .g-item:hover{border-color:rgba(255,255,255,.2);}
-  .g-item a.g-link{display:flex;align-items:center;gap:.5rem;text-decoration:none;color:#8db2ff;font-size:.78rem;margin-bottom:.3rem;overflow:hidden;}
-  .g-item a.g-link img{width:14px;height:14px;border-radius:3px;flex:0 0 auto;}
-  .g-item a.g-link span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .g-item h3{font-size:.98rem;font-weight:700;margin-bottom:.3rem;}
-  .g-item h3 a{color:#f2f2f7;text-decoration:none;}
-  .g-item h3 a:hover{text-decoration:underline;}
-  .g-item p{font-size:.8rem;color:#a6a6b8;line-height:1.5;}
-  .g-fallback{margin-top:1rem;font-size:.72rem;color:#67677a;text-align:center;line-height:1.6;}
-  .g-fallback a{color:#8db2ff;}
-  .g-empty{text-align:center;color:#67677a;font-size:.8rem;margin-top:1.5rem;}
+  .g-newtab{flex:0 0 auto;color:#8db2ff;font-size:.7rem;text-decoration:none;white-space:nowrap;padding:.4rem .2rem;}
+  .g-frame-wrap{flex:1 1 auto;position:relative;min-height:0;}
+  .g-frame-wrap iframe{width:100%;height:100%;border:none;display:block;background:#fff;}
+  .g-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#67677a;font-size:.8rem;padding:2rem;flex-direction:column;gap:.6rem;}
+  .g-empty a{color:#8db2ff;}
 </style>
 </head>
 <body>
-  <div class="g-logo">Recherche</div>
-  <form id="gForm" class="g-row">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input id="gInput" type="text" placeholder="Rechercher…" autocomplete="off">
-    <button type="submit">Rechercher</button>
-  </form>
-  <div class="g-status" id="gStatus"></div>
-  <div class="g-results" id="gResults"></div>
+<div class="g-wrap">
+  <div class="g-top">
+    <div class="g-logo">Recherche</div>
+    <form id="gForm" class="g-row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="gInput" type="text" placeholder="Rechercher sur Google…" autocomplete="off">
+      <button type="submit">Rechercher</button>
+    </form>
+    <a class="g-newtab" id="gNewTab" href="#" target="_blank" rel="noopener">↗ Onglet</a>
+  </div>
+  <div class="g-frame-wrap" id="gFrameWrap">
+    <div class="g-empty" id="gEmpty">Tape une recherche ci-dessus.</div>
+  </div>
+</div>
 
 <script>
-  // ⚠️ Remplace par l'URL de ton Worker Cloudflare (talco-search-worker.js déployé)
-  const SEARCH_WORKER_URL = 'https://talco-search.natla-caxi.workers.dev';
-
   const initialQuery = ${qJson};
   const input = document.getElementById('gInput');
-  const status = document.getElementById('gStatus');
-  const results = document.getElementById('gResults');
-  if(initialQuery){ input.value = initialQuery; }
+  const frameWrap = document.getElementById('gFrameWrap');
+  const newTabLink = document.getElementById('gNewTab');
+  let frame = null;
 
-  function escapeHtml(s){
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
+  // igu=1 : paramètre officiel de Google pour rendre la page de résultats
+  // embarquable dans un <iframe> (contourne X-Frame-Options sur cette page
+  // précise). igu = "iframe Google usage".
+  function googleUrl(q){ return 'https://www.google.com/search?igu=1&q=' + encodeURIComponent(q); }
 
-  async function runSearch(q){
+  function runSearch(q){
     q = (q||'').trim();
     if(!q) return;
-    status.textContent = 'Recherche…';
-    results.innerHTML = '';
-    try{
-      const res = await fetch(SEARCH_WORKER_URL + '?q=' + encodeURIComponent(q));
-      const data = await res.json();
-      if(!res.ok || data.error){
-        status.textContent = '';
-        results.innerHTML = '<div class="g-empty">Recherche indisponible (' + escapeHtml(data.error || res.status) + ').</div>' +
-          '<div class="g-fallback">Tu peux essayer sur <a href="https://www.google.com/search?q=' + encodeURIComponent(q) + '" target="_blank">Google</a> dans un nouvel onglet.</div>';
-        return;
-      }
-      status.textContent = '';
-      if(!data.results || !data.results.length){
-        results.innerHTML = '<div class="g-empty">Aucun résultat pour « ' + escapeHtml(q) + ' ».</div>';
-        return;
-      }
-      results.innerHTML = data.results.map(r => {
-        let host = '';
-        try{ host = new URL(r.url).hostname.replace(/^www\\./,''); }catch(e){ host = r.url; }
-        const favicon = r.favicon ? '<img src="' + escapeHtml(r.favicon) + '" alt="">' : '';
-        return '<div class="g-item">' +
-          '<a class="g-link" href="' + escapeHtml(r.url) + '" target="_blank">' + favicon + '<span>' + escapeHtml(host) + '</span></a>' +
-          '<h3><a href="' + escapeHtml(r.url) + '" target="_blank">' + escapeHtml(r.title) + '</a></h3>' +
-          '<p>' + escapeHtml(r.description) + '</p>' +
-        '</div>';
-      }).join('');
-    }catch(e){
-      status.textContent = '';
-      results.innerHTML = '<div class="g-empty">Erreur réseau vers le moteur de recherche.</div>' +
-        '<div class="g-fallback">Tu peux essayer sur <a href="https://www.google.com/search?q=' + encodeURIComponent(q) + '" target="_blank">Google</a> dans un nouvel onglet.</div>';
+    const url = googleUrl(q);
+    newTabLink.href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+    if(!frame){
+      frameWrap.innerHTML = '';
+      frame = document.createElement('iframe');
+      frame.title = 'Résultats Google';
+      frame.referrerPolicy = 'no-referrer-when-downgrade';
+      frameWrap.appendChild(frame);
     }
+    frame.src = url;
   }
 
   document.getElementById('gForm').addEventListener('submit', e=>{
     e.preventDefault();
     runSearch(input.value);
   });
-  if(initialQuery) runSearch(initialQuery);
+  if(initialQuery){ input.value = initialQuery; runSearch(initialQuery); }
   input.focus();
 <\/script>
 </body></html>`;
