@@ -19656,6 +19656,8 @@ p{color:#8a8aa0;font-size:.82rem;padding:2rem;text-align:center;}
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Centrale de Conversion</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"><\/script>
 <style>
 /* --- Version 83.2 : polish visuel (arrondis + animations douces) --- */
 *{scroll-behavior:smooth;}
@@ -21490,7 +21492,7 @@ function openAIModal(prefillContext){
   if(saved.length){
     body.innerHTML = saved.map(m=>m.role==='user'
       ? \`<div class="ai-bubble-user"><div class="who">Toi</div>\${m.text}</div>\`
-      : \`<div class="ai-bubble-ai"><div class="who">✨ Convert'AI</div>\${m.text}</div>\`).join('');
+      : \`<div class="ai-bubble-ai"><div class="who">✨ Convert'AI</div>\${mdLite(m.text)}</div>\`).join('');
     if(prefillContext) body.innerHTML += \`<div class="ai-context"><b>Contexte transmis à Convert'AI :</b>\\n\${prefillContext}</div>\`;
   } else if(prefillContext){
     body.innerHTML = \`<div class="ai-context"><b>Contexte transmis à Convert'AI :</b>\\n\${prefillContext}</div>\`;
@@ -21526,6 +21528,16 @@ document.getElementById('aiModalOverlay').addEventListener('click', (e)=>{
 
 function mdLite(t){
   if(!t) return '';
+  const renderTex=(tex,display)=>{
+    try{ return katex.renderToString(tex.trim(),{displayMode:display,throwOnError:false}); }
+    catch(e){ return tex; }
+  };
+  if(typeof katex!=='undefined'){
+    t = t.replace(/\\\\\\[([\\s\\S]+?)\\\\\\]/g,(m,tex)=>renderTex(tex,true));
+    t = t.replace(/\\$\\$([\\s\\S]+?)\\$\\$/g,(m,tex)=>renderTex(tex,true));
+    t = t.replace(/\\\\\\(([\\s\\S]+?)\\\\\\)/g,(m,tex)=>renderTex(tex,false));
+    t = t.replace(/(?<!\\\\)\\$([^\\n$]+?)(?<!\\\\)\\$/g,(m,tex)=>renderTex(tex,false));
+  }
   t = t.replace(/\\*\\*(.+?)\\*\\*/g,'<b>$1</b>');
   t = t.replace(/\\*(.+?)\\*/g,'<i>$1</i>');
   t = t.replace(/^\\s*[\\-=]{3,}\\s*$/gm,'');
