@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -2729,7 +2728,7 @@
       </div>
       <h1 class="gate-logo">TalcoITN</h1>
       <div class="gate-sub">Talco IT Networks (ITN)</div>
-      <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 127.5</div>
+      <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 128.5</div>
     </div>
 
     <div class="gate-card glass">
@@ -3283,12 +3282,15 @@ button,input,textarea{font-family:var(--font);}
 /* WhatsApp-style bubble: hugs content, capped width, never stretches the row */
 .bubble{
   display:inline-block;
-  max-width:min(72%,480px);
-  min-width:0;
+  max-width:min(78%,520px);
+  min-width:96px;
   width:fit-content;
-  padding:16px 10px 8px;
+  /* Padding équilibré : les bulles étaient trop hautes (gros padding en haut
+     pour laisser la place aux boutons) et trop étroites (padding horizontal
+     minuscule). Les boutons passent maintenant AU-DESSUS de la bulle. */
+  padding:7px 12px 6px;
   border-radius:16px;
-  font-size:14.5px;line-height:1.4;
+  font-size:14.5px;line-height:1.45;
   word-break:break-word;overflow-wrap:break-word;
   white-space:pre-wrap;
   position:relative;
@@ -3309,12 +3311,13 @@ button,input,textarea{font-family:var(--font);}
 .bubble .sender{font-size:11px;font-weight:700;color:var(--a2);margin-bottom:3px;display:block;}
 .bubble-content{display:flex;flex-wrap:wrap;align-items:flex-end;column-gap:8px;row-gap:2px;}
 .bubble-content .bubble-text{display:inline;white-space:pre-wrap;word-break:break-word;overflow-wrap:break-word;flex:1 1 auto;min-width:0;}
-.bubble .msg-time{font-size:10px;opacity:.55;white-space:nowrap;margin-left:auto;flex-shrink:0;}
+.bubble .msg-time{font-size:10px;opacity:.55;white-space:nowrap;margin-left:6px;flex-shrink:0;}
 .msg-row.me .bubble .msg-time{color:rgba(255,255,255,.7);}
 .bubble .edited-tag{font-size:10px;opacity:.55;font-style:italic;white-space:nowrap;flex-shrink:0;}
 .bubble.deleted-bubble{font-style:italic;opacity:.6;background:rgba(255,255,255,.03)!important;border:1px dashed var(--border)!important;color:var(--sub)!important;box-shadow:none!important;}
 
-.bubble-actions{position:absolute;top:2px;right:4px;display:flex;gap:2px;z-index:2;}
+.bubble-actions{position:absolute;top:-9px;right:4px;display:flex;gap:2px;z-index:3;opacity:0;pointer-events:none;transition:opacity .15s;}
+.bubble:hover .bubble-actions,.bubble:focus-within .bubble-actions{opacity:1;pointer-events:auto;}
 .msg-more-btn,.msg-react-btn{
   position:static;background:rgba(0,0,0,.18);border:none;
   color:inherit;opacity:.65;cursor:pointer;font-size:13px;line-height:1;
@@ -3322,7 +3325,7 @@ button,input,textarea{font-family:var(--font);}
 }
 .msg-row.them .bubble-actions .msg-more-btn,.msg-row.them .bubble-actions .msg-react-btn{background:rgba(255,255,255,.08);}
 .msg-more-btn:hover,.msg-react-btn:hover{opacity:1!important;background:rgba(255,255,255,.25);}
-@media(hover:none){.msg-more-btn,.msg-react-btn{opacity:.75;}}
+@media(hover:none){.msg-more-btn,.msg-react-btn{opacity:.75;}.bubble .bubble-actions{opacity:1;pointer-events:auto;}}
 
 .msg-menu{
   position:absolute;top:calc(100% + 4px);right:0;
@@ -3604,7 +3607,7 @@ button,input,textarea{font-family:var(--font);}
     width:34px;height:34px;font-size:19px;
     color:var(--text);
   }
-  .bubble{max-width:82%;}
+  .bubble{max-width:86%;}
   #chat-header{padding:10px 10px;}
   .conv-last{max-width:60vw;}
 }
@@ -11083,66 +11086,9 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
             function ti(title) {
                 return TRACKS.findIndex(t => t.title === title);
             }
-            const PLAYLISTS = [{
-                name: "🔥 Soirée Tuff",
-                emoji: "🔥",
-                tracks: [ti("LVC"), ti("Flying Blue"), ti("Six-Seven"), ti("Mr Saxobeat"), ti("Tiki Tiki"), ti("Pilier"), ti("Yeah"), ti("When We Were Young"), ti("Vida Loca"), ti("Shake It to the Max"), ti("Rock my Body"), ti("Play Hard"), ti("Pepas"), ti("One in a Million"), ti("Gimme Gimme Gimme"), ti("Gangnam Style"), ti("I Gotta Feeling"), ti("Freed From Desire"), ti("Espresso"), ti("Billie Jean")]
-            }, {
-                name: "🌊 Jul & Gims",
-                emoji: "🌊",
-                tracks: [ti("Wesh Alors"), ti("Tropical"), ti("Tu me rends bête"), ti("SPA"), ti("Sois pas Timide"), ti("Sapés comme jamais"), ti("Phénoménal"), ti("Parisienne"), ti("Never Going Home Tonight"), ti("Ninao"), ti("Nostalgique"), ti("Somewhere"), ti("Prélude et Allegro"), ti("Moulaga"), ti("Ma jolie"), ti("Bwo"), ti("Alors la Zone"), ti("Asalto"), ti("Bande Organisée"), ti("Air Force Blanche"), ti("Laissez passer"), ti("Ciel"), ti("Bloqué"), ti("Bella")]
-            }, {
-                name: "🎼 Classique",
-                emoji: "🎼",
-                tracks: [ti("Sonate Clair de Lune 1"), ti("Sonate Clair de Lune 3"), ti("Rondo alla Turca"), ti("Symphonie en Do"), ti("Prélude et Allegro"), ti("Lettre à Elise"), ti("Lacriosa"), ti("Eine Kleine Nachtmusik"), ti("Fantaisie Alto"), ti("La Reine de Coeur"), ti("Concerto en Do m")]
-            }, {
-                name: "⚡ R&B / Rap",
-                emoji: "⚡",
-                tracks: [ti("LVC"), ti("Flying Blue"), ti("Tiki Tiki"), ti("Pilier"), ti("Yeah"), ti("Moulaga"), ti("Sur ma Route"), ti("Melrose Place"), ti("Béné"), ti("Basique"), ti("Chemin d'Or"), ti("Dépassé")]
-            }, {
-                name: "🌴 Détente & Chill",
-                emoji: "🌴",
-                tracks: [ti("Six-Seven"), ti("Walking Away"), ti("Moonlight Shadow"), ti("Memories"), ti("Miss You"), ti("The Sound of Silence"), ti("I'm Yours"), ti("Flowers"), ti("Cover Me in Sunshine")]
-            }, {
-                name: "💃 Dance & Club",
-                emoji: "💃",
-                tracks: [ti("Mr Saxobeat"), ti("Macarena"), ti("Samba de Janeiro"), ti("Shake It to the Max"), ti("Pepas"), ti("Make You Mouv"), ti("Magic in the Air"), ti("Vida Loca"), ti("Sun Is Up"), ti("Rock my Body"), ti("Tiki Tiki"), ti("Yeah"), ti("Danza Kuduro"), ti("Gangnam Style"), ti("Gata Only"), ti("Espresso"), ti("APT.")]
-            }, {
-                name: "💜 David Guetta",
-                emoji: "💜",
-                tracks: [ti("Titanium"), ti("Play Hard"), ti("One in a Million"), ti("Never Going Home Tonight"), ti("When We Were Young"), ti("I'm Good"), ti("I don't Wanna Wait"), ti("Gone Gone Gone"), ti("Forever Young"), ti("Beautiful People")]
-            }, {
-                name: "🚀 Épique",
-                emoji: "🚀",
-                tracks: [ti("Never Back Down"), ti("The Final Countdown"), ti("Thunder"), ti("Rush E"), ti("Trailer Sport Stylish"), ti("Crusade"), ti("Elektronomia"), ti("Bigroom EDM")]
-            }, {
-                name: "❤️ Amour",
-                emoji: "❤️",
-                tracks: [ti("Ma Chérie"), ti("My Heart Will Go On"), ti("Someone to be Mine"), ti("Some Kind of Kiss"), ti("Tatoo"), ti("The Fate of Ophélia"), ti("Six-Seven"), ti("Flowers"), ti("I Adore You"), ti("Hearts Still Beating")]
-            }, {
-                name: "🎉 Fiesta",
-                emoji: "🎉",
-                tracks: [ti("Vida Loca"), ti("Macarena"), ti("Samba de Janeiro"), ti("Magic in the Air"), ti("Pepas"), ti("Sun Is Up"), ti("Logobitombo"), ti("Que Pasa"), ti("Minimum Ça"), ti("Tiki Tiki"), ti("Despacito"), ti("Hôtel Room Service"), ti("C'est la Vie"), ti("Gata Only"), ti("I Gotta Feeling")]
-            }, {
-                name: "🌐 EDM / Electro",
-                emoji: "🌐",
-                tracks: [ti("Where Are You Now"), ti("Moonlight Shadow"), ti("This Is the Life"), ti("The Magic Key"), ti("Memories"), ti("Monster"), ti("Thunder"), ti("Get Lucky"), ti("Elektronomia"), ti("Freestyler"), ti("Game Started"), ti("San Francisco")]
-            }, {
-                name: "🇫🇷 Variété FR",
-                emoji: "🇫🇷",
-                tracks: [ti("Ma jolie"), ti("Parisienne"), ti("Terminal 2F"), ti("Ninao"), ti("SPA"), ti("Moulaga"), ti("Tahiti"), ti("Tropical"), ti("Nostalgique"), ti("Phénoménal"), ti("Dernière Danse"), ti("Clic clic pan pan"), ti("Ego"), ti("C'est la Vie")]
-            }, {
-                name: "🤖 Daft Punk & Friends",
-                emoji: "🤖",
-                tracks: [ti("Get Lucky"), ti("Elektronomia"), ti("Game Started"), ti("Around the World"), ti("In My Mind"), ti("Freestyler")]
-            }, {
-                name: "💋 Hits 2020s",
-                emoji: "💋",
-                tracks: [ti("APT."), ti("Espresso"), ti("Flowers"), ti("Billie Jean"), ti("ABCDEFU"), ti("Beggin"), ti("Dancing in the Flames"), ti("Gata Only"), ti("Tatoo"), ti("When We Were Young"), ti("I'm Good"), ti("Gone Gone Gone"), ti("Never Going Home Tonight")]
-            }].map(pl => ({
-                ...pl,
-                tracks: [...new Set(pl.tracks)].filter(t => t >= 0 && t < TRACKS.length)
-            }));
+            // Plus aucune playlist prédéfinie : seules les playlists créées
+            // par l'utilisateur (Firestore) sont affichées.
+            const PLAYLISTS = [];
 
             // ══ PLAYLISTS PERSONNELLES (Firebase) ══
             // Connexion SSO (même compte que le reste du site) pour pouvoir
@@ -11180,12 +11126,13 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 if (!cosmicAuthReady)
                     return;
                 try {
-                    const snap = await userPlaylistsRef().orderBy('createdAt', 'desc').get();
+                    const snap = await userPlaylistsRef().get();
                     userPlaylists = snap.docs.map(doc => {
                         const d = doc.data();
                         const tracksIdx = (d.trackTitles || []).map(ti).filter(t => t >= 0 && t < TRACKS.length);
-                        return { id: doc.id, name: d.name || 'Playlist', emoji: '⭐', tracks: tracksIdx, mine: true };
+                        return { id: doc.id, name: d.name || 'Playlist', emoji: '⭐', tracks: tracksIdx, mine: true, createdAt: d.createdAt || 0 };
                     });
+                    userPlaylists.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
                     if (document.getElementById('playlistGrid').style.display !== 'none')
                         buildPlaylistGrid();
                 } catch (err) {
@@ -15374,7 +15321,7 @@ window.addEventListener('load', () => {
       { id: 'music', name: 'Music', desc: 'Lecteur & playlists', icon: '🎵', grad: 'linear-gradient(135deg,#ffb454,#ff6fa5)', sub: ['Cosmic', 'Blind-test', 'DJ'] },
       { id: 'map', name: 'Map', desc: 'Cartographie', icon: '🗺️', grad: 'linear-gradient(135deg,#22d3c5,#4f7cff)', sub: null },
       { id: 'google', name: 'Google', desc: 'Recherche & navigation Google', icon: '🔎', grad: 'linear-gradient(135deg,#4f7cff,#ffb454)', sub: null },
-      { id: 'enseignement', name: 'Enseignement', desc: 'Ressources pédagogiques', icon: '📚', grad: 'linear-gradient(135deg,#4f7cff,#6d5dfc)', sub: ['208', '109', 'Presse'] },
+      { id: 'enseignement', name: 'Enseignement', desc: 'Ressources pédagogiques', icon: '📚', grad: 'linear-gradient(135deg,#4f7cff,#6d5dfc)', sub: ['208', '109', 'HGGSP', 'Presse'] },
       { id: 'pratics', name: 'Pratics', desc: 'Outils du quotidien', icon: '🧭', grad: 'linear-gradient(135deg,#22d3c5,#ffb454)', sub: ['Heures', 'HTML 1', 'HTML 2', 'Bac à sable', 'Base 64', 'Jeu'] },
       { id: 'settings', name: 'Settings', desc: 'Personnalisation du site', icon: '⚙️', grad: 'linear-gradient(135deg,#67677a,#a6a6b8)', sub: null },
     ];
@@ -20055,6 +20002,15 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
       // Community/Exchange). Sur "109", chaque matière est éditable en intégralité
       // (titre, image, lien externe ET contenu riche) mais UNIQUEMENT par un admin.
       if (modId === 'enseignement') {
+        // --- Sous-onglet "HGGSP" : site externe dédié.
+        if (sub === 'HGGSP') {
+          return `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>*{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;background:#0a0a12;}iframe{width:100%;height:100%;border:none;display:block;}</style>
+</head><body>
+<iframe src="https://natlacaxi.github.io/hggsp/" title="HGGSP"></iframe>
+</body></html>`;
+        }
         // --- Sous-onglet "Presse" : accès direct au site externe
         // natlacaxi.github.io/presse (digicode d'entrée retiré).
         if (sub === 'Presse') {
@@ -20661,10 +20617,11 @@ html,body{height:100%;background:radial-gradient(circle at 15% 0%,#181828,#0a0a1
       const retryBtn = document.getElementById('retryLoadBtn');
       if (retryBtn) retryBtn.addEventListener('click', () => { done = true; loadAll(); });
     }, 6000);
-    matieresRef.orderBy('order','asc').get().then(snap => {
+    matieresRef.get().then(snap => {
       done = true; clearTimeout(slowTimer);
       matieres = [];
       snap.forEach(doc => matieres.push(Object.assign({id: doc.id}, doc.data())));
+      matieres.sort((a,b) => (a.order||0) - (b.order||0)); // tri côté client
       renderGrid();
     }).catch(e => {
       done = true; clearTimeout(slowTimer);
@@ -22168,10 +22125,21 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
   auth.signInWithEmailAndPassword(ssoEmail, ssoPass).then(async cred=>{
     myUid = cred.user.uid;
     topicsRef = db.collection('communityTopics');
-    topicsRef.orderBy('createdAt','desc').limit(100).get().then(snap=>{
+    // Même correctif que pour Enseignement 109 : plus d'orderBy() côté
+    // Firestore (index/règles), on trie en JS. Et un garde-fou de 8s pour ne
+    // plus rester bloqué sur "Chargement…".
+    let done = false;
+    const slowTimer = setTimeout(()=>{
+      if(done) return;
+      topicList.innerHTML = '<div class="empty-lib">Le chargement prend plus de temps que prévu… vérifiez votre connexion.</div>';
+    }, 8000);
+    topicsRef.limit(100).get().then(snap=>{
+      done = true; clearTimeout(slowTimer);
       topics = snap.docs.map(d=> Object.assign({id:d.id}, d.data()));
+      topics.sort((a,b)=> (b.createdAt||0) - (a.createdAt||0));
       renderTopics();
     }).catch(err=>{
+      done = true; clearTimeout(slowTimer);
       topicList.innerHTML = '<div class="empty-lib" style="color:#ff6f6f;">Erreur de chargement : '+err.message+'</div>';
     });
   }).catch(err=>{
