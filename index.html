@@ -9464,7 +9464,7 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                             <button class="gear-menu-item" onclick="closeGearMenu();openContact()">
                                 <span class="gmi-ico">✉️</span> Contact
                             </button>
-                            <button class="gear-menu-item" onclick="closeGearMenu();if(window.talcoOpenParolesDigicode)window.talcoOpenParolesDigicode()">
+                            <button class="gear-menu-item" onclick="closeGearMenu();console.log('[Paroles] clic bouton menu, fonction dispo:', !!window.talcoOpenParolesDigicode);if(window.talcoOpenParolesDigicode){window.talcoOpenParolesDigicode();}else{alert('Panneau Paroles non initialisé — regarde la console (F12) pour l\'erreur.');}">
                                 <span class="gmi-ico">🔒</span> Paroles
                             </button>
                             <div class="gear-menu-sep"></div>
@@ -10558,6 +10558,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
 
             function renderLyrics(track) {
                 const box = document.getElementById('npLyricsInner');
+                if (typeof window.talcoApplyLyricsOverride === 'function') window.talcoApplyLyricsOverride(track);
                 const lyricsScroll = document.getElementById('npLyrics');
                 if (lyricsScroll) lyricsScroll.scrollTop = 0;
                 if (typeof updateNpShrink === 'function') updateNpShrink(0);
@@ -10584,6 +10585,293 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                         `<p class="np-lyrics-line${l.chorus ? ' np-lyrics-chorus' : ''}" data-i="${i}">${l.text}</p>`
                     ).join('');
             }
+
+            // ══ PAROLES — panneau cache d'edition des paroles (Firebase lyrics-8a6a5) ══
+            // Declenchement : 7 taps sur la zone invisible en bas a droite de l'ecran,
+            // en tapant "paroles" au clavier, ou via le bouton du menu (icone cadenas).
+            // Le code d'acces n'est jamais ecrit ici : il est recupere au moment de
+            // l'ouverture du panneau depuis le Worker Cloudflare (lyrics.talcoitn.workers.dev).
+            // ATTENTION : ce code reste visible dans l'onglet Reseau du navigateur (F12) :
+            // ce digicode filtre l'acces occasionnel, ce n'est pas une vraie authentification.
+            (function () {
+                const LYRICS_WORKER_URL = 'https://lyrics.talcoitn.workers.dev/';
+                const lyricsFirebaseConfig = {
+                    apiKey: "AIzaSyCte97K_ahX53UTVfpWocPua1_52IMgVZ0",
+                    authDomain: "lyrics-8a6a5.firebaseapp.com",
+                    projectId: "lyrics-8a6a5",
+                    storageBucket: "lyrics-8a6a5.firebasestorage.app",
+                    messagingSenderId: "634733245791",
+                    appId: "1:634733245791:web:d756015c110fab446f72ea"
+                };
+
+                let lyricsApp = null, lyricsDb = null, lyricsAuthDone = false;
+                try {
+                    lyricsApp = (firebase.apps || []).some(a => a.name === 'lyricsApp')
+                        ? firebase.app('lyricsApp')
+                        : firebase.initializeApp(lyricsFirebaseConfig, 'lyricsApp');
+                    lyricsDb = firebase.firestore(lyricsApp);
+                } catch (e) { console.error('[Paroles] init Firebase impossible :', e); }
+
+                function slug(title) {
+                    return String(title || '').trim().toLowerCase()
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'sans-titre';
+                }
+
+                // Applique une version modifiee des paroles quand elle existe (lecture publique).
+                const overrideCache = new Map();
+                window.talcoApplyLyricsOverride = function (track) {
+                    if (!lyricsDb || !track) return;
+                    const id = slug(track.title);
+                    const reapply = (text) => {
+                        if (text && text !== track.lyrics) {
+                            track.lyrics = text;
+                            if (typeof TRACKS !== 'undefined' && TRACKS[cur] === track && typeof renderLyrics === 'function') renderLyrics(track);
+                        }
+                    };
+                    if (overrideCache.has(id)) { reapply(overrideCache.get(id)); return; }
+                    lyricsDb.collection('lyrics').doc(id).get().then(doc => {
+                        const text = doc.exists ? (doc.data().text || '') : '';
+                        overrideCache.set(id, text);
+                        reapply(text);
+                    }).catch(() => {});
+                };
+
+                // ── UI : overlay + digicode + editeur ──
+                let ui = null, enteredCode = '', realCode = null, editingTrack = null;
+
+                function buildUI() {
+                    if (ui) return ui;
+                    const wrap = document.createElement('div');
+                    wrap.id = 'talcoParolesOverlay';
+                    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:none;flex-direction:column;align-items:center;justify-content:flex-start;background:#000;overflow-y:auto;font-family:var(--font,"Inter",sans-serif);';
+                    wrap.innerHTML = `
+                        <div id="talcoParolesStepCode" style="min-height:100%;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1rem;box-sizing:border-box;">
+                            <div style="width:92px;height:92px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:2.1rem;margin-bottom:1.4rem;box-shadow:0 0 40px rgba(255,255,255,.15);">🔒</div>
+                            <div style="text-align:center;font-size:1rem;font-weight:700;color:#fff;margin-bottom:.2rem;">Paroles</div>
+                            <div style="text-align:center;font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:1.6rem;">Entrez le code d'accès</div>
+                            <div id="talcoPinDots" style="display:flex;justify-content:center;gap:12px;margin-bottom:1.6rem;"></div>
+                            <div id="talcoPinPad" style="display:grid;grid-template-columns:repeat(3,64px);gap:14px;"></div>
+                            <div id="talcoPinMsg" style="text-align:center;font-size:.75rem;color:#f43f5e;min-height:1.2em;margin-top:1rem;"></div>
+                            <button id="talcoPinClose" type="button" style="margin-top:1.6rem;padding:.6rem 1.4rem;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:none;color:rgba(255,255,255,.6);font-size:.78rem;cursor:pointer;">Annuler</button>
+                        </div>
+                        <div id="talcoParolesStepEdit" style="display:none;width:100%;min-height:100%;box-sizing:border-box;padding:1.2rem 1rem 3rem;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;position:sticky;top:0;background:#000;padding:.4rem 0;z-index:2;">
+                                <div style="font-size:1rem;font-weight:700;color:#fff;">Paroles — <span id="talcoParolesCount">0</span> titres</div>
+                                <button id="talcoParolesCancel" type="button" style="padding:.5rem 1rem;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:none;color:rgba(255,255,255,.7);font-size:.75rem;cursor:pointer;">Fermer</button>
+                            </div>
+                            <input id="talcoParolesSearch" type="text" placeholder="Rechercher un titre..." style="width:100%;padding:.6rem .8rem;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:.85rem;margin-bottom:.9rem;box-sizing:border-box;">
+                            <div id="talcoParolesList"></div>
+                        </div>`;
+                    document.body.appendChild(wrap);
+                    ui = wrap;
+                    wrap.querySelector('#talcoPinClose').addEventListener('click', closeUI);
+                    wrap.querySelector('#talcoParolesCancel').addEventListener('click', closeUI);
+                    wrap.querySelector('#talcoParolesSearch').addEventListener('input', onSearch);
+                    buildPad();
+                    return wrap;
+                }
+
+                function closeUI() {
+                    if (!ui) return;
+                    ui.style.display = 'none';
+                    resetPin();
+                    ui.querySelector('#talcoParolesStepEdit').style.display = 'none';
+                    ui.querySelector('#talcoParolesStepCode').style.display = 'flex';
+                }
+
+                function buildPad() {
+                    const pad = ui.querySelector('#talcoPinPad');
+                    const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'DEL', '0', 'OK'];
+                    pad.innerHTML = '';
+                    keys.forEach(k => {
+                        const b = document.createElement('button');
+                        b.type = 'button'; b.textContent = k;
+                        const isAction = (k === 'DEL' || k === 'OK');
+                        b.style.cssText = `width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,.25);`+
+                            `background:${isAction ? 'rgba(255,255,255,.08)' : '#fff'};color:${isAction ? '#fff' : '#000'};`+
+                            `font-size:${isAction ? '.72rem' : '1.15rem'};font-weight:700;cursor:pointer;`;
+                        b.addEventListener('click', () => onPinKey(k));
+                        pad.appendChild(b);
+                    });
+                }
+
+                function resetPin() {
+                    enteredCode = '';
+                    paintDots();
+                    const msg = ui.querySelector('#talcoPinMsg'); if (msg) msg.textContent = '';
+                }
+
+                function paintDots() {
+                    const dots = ui.querySelector('#talcoPinDots');
+                    dots.innerHTML = Array.from({ length: 4 }).map((_, i) =>
+                        `<div style="width:13px;height:13px;border-radius:50%;background:${i < enteredCode.length ? '#fff' : 'rgba(255,255,255,.15)'};transition:background .15s;"></div>`
+                    ).join('');
+                }
+
+                function onPinKey(k) {
+                    if (k === 'DEL') { enteredCode = enteredCode.slice(0, -1); paintDots(); return; }
+                    if (k === 'OK') { checkCode(); return; }
+                    if (enteredCode.length >= 4) return;
+                    enteredCode += k;
+                    paintDots();
+                    if (enteredCode.length === 4) checkCode();
+                }
+
+                function checkCode() {
+                    const msg = ui.querySelector('#talcoPinMsg');
+                    if (!realCode) { msg.textContent = "Code indisponible, reessaie plus tard."; return; }
+                    if (enteredCode === String(realCode)) {
+                        openEditor();
+                    } else {
+                        msg.textContent = 'Code incorrect.';
+                        enteredCode = ''; paintDots();
+                    }
+                }
+
+                function openEditor() {
+                    ui.querySelector('#talcoParolesStepCode').style.display = 'none';
+                    ui.querySelector('#talcoParolesStepEdit').style.display = 'block';
+                    if (lyricsApp && !lyricsAuthDone) {
+                        firebase.auth(lyricsApp).signInAnonymously()
+                            .then(() => { lyricsAuthDone = true; })
+                            .catch(e => console.error('[Paroles] auth anonyme echouee :', e));
+                    }
+                    renderTrackList('');
+                }
+
+                // Construit la liste complète des titres (306) avec bouton "Ajouter".
+                // Le clic sur "Ajouter" ouvre une zone de collage juste sous la ligne ;
+                // coller le texte l'enregistre immediatement, sans etape supplementaire.
+                function renderTrackList(filterQ) {
+                    const listEl = ui.querySelector('#talcoParolesList');
+                    const countEl = ui.querySelector('#talcoParolesCount');
+                    if (!listEl || typeof TRACKS === 'undefined') return;
+                    const q = (filterQ || '').trim().toLowerCase();
+                    const rows = TRACKS.map((t, i) => ({ t, i }))
+                        .filter(({ t }) => !q || t.title.toLowerCase().includes(q) || (t.artist || '').toLowerCase().includes(q));
+                    countEl.textContent = TRACKS.length;
+                    listEl.innerHTML = rows.map(({ t, i }) => {
+                        const has = !!(t.lyrics && t.lyrics.trim() && t.lyrics !== 'Aucune parole pour ce titre' && t.lyrics !== 'Aucune paroles pour ce titre');
+                        return `
+                        <div class="talco-paroles-row" data-i="${i}" style="border-bottom:1px solid rgba(255,255,255,.08);padding:.7rem .2rem;">
+                          <div style="display:flex;align-items:center;justify-content:space-between;gap:.6rem;">
+                            <div style="min-width:0;">
+                              <div style="font-size:.85rem;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(t.emoji || '🎵')} ${t.title}</div>
+                              <div style="font-size:.7rem;color:rgba(255,255,255,.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.artist || ''}${has ? ' · <span style="color:#4ade80;">paroles OK</span>' : ''}</div>
+                            </div>
+                            <button type="button" class="talco-paroles-add" data-i="${i}" style="flex:none;padding:.4rem .9rem;border-radius:999px;border:none;background:#fff;color:#000;font-weight:700;font-size:.72rem;cursor:pointer;">Ajouter</button>
+                          </div>
+                          <div class="talco-paroles-paste" id="talcoPaste${i}" style="display:none;margin-top:.6rem;"></div>
+                        </div>`;
+                    }).join('');
+                    listEl.querySelectorAll('.talco-paroles-add').forEach(btn => {
+                        btn.addEventListener('click', () => togglePasteBox(+btn.dataset.i));
+                    });
+                }
+
+                function onSearch(e) { renderTrackList(e.target.value); }
+
+                function togglePasteBox(i) {
+                    const box = ui.querySelector('#talcoPaste' + i);
+                    if (!box) return;
+                    if (box.dataset.open === '1') { box.style.display = 'none'; box.dataset.open = '0'; box.innerHTML = ''; return; }
+                    box.dataset.open = '1';
+                    box.style.display = 'block';
+                    box.innerHTML = `
+                        <textarea placeholder="Colle les paroles ici — enregistrement instantané" rows="6"
+                            style="width:100%;box-sizing:border-box;resize:vertical;padding:.6rem;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;font-size:.78rem;line-height:1.5;"></textarea>
+                        <div class="talco-paste-msg" style="font-size:.7rem;color:rgba(255,255,255,.5);min-height:1.1em;margin-top:.3rem;"></div>`;
+                    const ta = box.querySelector('textarea');
+                    const msg = box.querySelector('.talco-paste-msg');
+                    ta.value = TRACKS[i].lyrics && TRACKS[i].lyrics !== 'Aucune parole pour ce titre' && TRACKS[i].lyrics !== 'Aucune paroles pour ce titre' ? TRACKS[i].lyrics : '';
+                    ta.focus();
+                    // Coller = enregistrement instantane (pas de bouton "Enregistrer" a cliquer).
+                    ta.addEventListener('paste', () => setTimeout(() => saveLyricsFor(i, ta.value, msg), 0));
+                    let typingTimer = null;
+                    ta.addEventListener('input', () => {
+                        clearTimeout(typingTimer);
+                        typingTimer = setTimeout(() => saveLyricsFor(i, ta.value, msg), 700);
+                    });
+                }
+
+                function saveLyricsFor(i, text, msgEl) {
+                    const track = TRACKS[i];
+                    if (!track) return;
+                    if (!lyricsDb) { if (msgEl) msgEl.textContent = 'Base de donnees indisponible.'; return; }
+                    if (msgEl) { msgEl.textContent = 'Enregistrement...'; msgEl.style.color = 'rgba(255,255,255,.5)'; }
+                    lyricsDb.collection('lyrics').doc(slug(track.title)).set({
+                        text, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        track.lyrics = text;
+                        overrideCache.set(slug(track.title), text);
+                        if (typeof TRACKS !== 'undefined' && TRACKS[cur] === track && typeof renderLyrics === 'function') renderLyrics(track);
+                        if (msgEl) { msgEl.textContent = '✓ Enregistré instantanément.'; msgEl.style.color = '#4ade80'; }
+                        renderTrackList(ui.querySelector('#talcoParolesSearch').value);
+                    }).catch(e => { if (msgEl) { msgEl.textContent = 'Erreur : ' + (e.message || e); msgEl.style.color = '#f43f5e'; } });
+                }
+
+                function fetchCodeThenOpen() {
+                    buildUI();
+                    ui.style.display = 'flex';
+                    ui.querySelector('#talcoParolesStepCode').style.display = 'flex';
+                    ui.querySelector('#talcoParolesStepEdit').style.display = 'none';
+                    resetPin();
+                    if (realCode) return; // deja recupere cette session
+                    loadCode();
+                }
+
+                function loadCode() {
+                    const msg = ui.querySelector('#talcoPinMsg');
+                    if (msg) { msg.textContent = ''; msg.style.color = '#f43f5e'; }
+                    fetch(LYRICS_WORKER_URL).then(r => {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.json().catch(() => r.text());
+                    }).then(data => {
+                        realCode = (data && (data.code || data.pin || data.digicode)) || (typeof data === 'string' ? data.trim() : null);
+                        if (!realCode) {
+                            console.error('[Paroles] reponse du Worker inattendue :', data);
+                            if (msg) msg.textContent = 'Reponse du serveur invalide.';
+                        }
+                    }).catch(e => {
+                        console.error('[Paroles] impossible de recuperer le code :', e);
+                        if (msg) {
+                            msg.innerHTML = 'Connexion au serveur impossible. <span id="talcoPinRetry" style="text-decoration:underline;cursor:pointer;">Reessayer</span>';
+                            const retry = msg.querySelector('#talcoPinRetry');
+                            if (retry) retry.addEventListener('click', loadCode);
+                        }
+                    });
+                }
+
+                window.talcoOpenParolesDigicode = fetchCodeThenOpen;
+
+                // ── Declencheurs : 7 taps zone invisible + saisie clavier "paroles" ──
+                const zone = document.createElement('div');
+                zone.id = 'talcoParolesZone';
+                zone.style.cssText = 'position:fixed;right:0;bottom:0;width:70px;height:70px;z-index:40;opacity:0;';
+                document.body.appendChild(zone);
+                let tapCount = 0, tapTimer = null;
+                zone.addEventListener('click', () => {
+                    tapCount++;
+                    clearTimeout(tapTimer);
+                    tapTimer = setTimeout(() => { tapCount = 0; }, 4000);
+                    if (tapCount >= 7) { tapCount = 0; window.talcoOpenParolesDigicode(); }
+                });
+                let typedBuffer = '';
+                document.addEventListener('keydown', e => {
+                    // Si le digicode Paroles est ouvert, le clavier ordi tape directement le code.
+                    if (ui && ui.style.display === 'flex' && ui.querySelector('#talcoParolesStepCode').style.display !== 'none') {
+                        if (/^[0-9]$/.test(e.key)) { e.preventDefault(); onPinKey(e.key); return; }
+                        if (e.key === 'Backspace') { e.preventDefault(); onPinKey('DEL'); return; }
+                        if (e.key === 'Enter') { e.preventDefault(); onPinKey('OK'); return; }
+                        if (e.key === 'Escape') { e.preventDefault(); closeUI(); return; }
+                        return;
+                    }
+                    if (e.key.length !== 1) return;
+                    typedBuffer = (typedBuffer + e.key).slice(-7).toLowerCase();
+                    if (typedBuffer === 'paroles') { typedBuffer = ''; window.talcoOpenParolesDigicode(); }
+                });
+            })();
 
             function paintStaticLyrics() {
                 const box = document.getElementById('npLyricsInner');
@@ -10682,7 +10970,13 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
             function renderHeroSuggestions() {
                 const box = document.getElementById('heroSuggest');
                 if (!box) return;
-                box.style.cssText = 'display:flex;flex-wrap:wrap;gap:0.7rem;margin-bottom:0.3rem;';
+                if (!document.getElementById('heroSuggestScrollbarFix')) {
+                    const st = document.createElement('style');
+                    st.id = 'heroSuggestScrollbarFix';
+                    st.textContent = '#heroSuggest::-webkit-scrollbar{display:none;}';
+                    document.head.appendChild(st);
+                }
+                box.style.cssText = 'display:flex;flex-wrap:nowrap;gap:0.7rem;margin-bottom:0.3rem;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px;';
                 const pool = [...TRACKS.keys()];
                 const picks = [];
                 while (picks.length < 3 && pool.length) {
@@ -10695,7 +10989,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                     const g0 = (t.g && t.g[0]) || '#4f7cff', g1 = (t.g && t.g[1]) || '#ff6fa5';
                     const card = document.createElement('div');
                     card.className = 'hero-suggest-card';
-                    card.style.cssText = `cursor:pointer;width:132px;border-radius:16px;overflow:hidden;`+
+                    card.style.cssText = `cursor:pointer;width:132px;flex:0 0 auto;border-radius:16px;overflow:hidden;`+
                         `border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);`+
                         `backdrop-filter:blur(14px);transition:transform .18s ease,border-color .18s ease;`;
                     card.innerHTML = `
@@ -22136,265 +22430,11 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
       const hist = Store.get('talcoitn_history', []);
       el.innerHTML = hist.slice(0, 40).map(h => `<div>${new Date(h.t).toLocaleString('fr-FR')} — ${h.a}</div>`).join('') || '<div>Aucune entrée.</div>';
 
-      /* ═══════════════════════════════════════════════════════════════
-         PAROLES — Panneau caché d'édition des paroles (Firebase Firestore)
-         Déclenchement : 7 taps sur la zone invisible en bas à droite de
-         l'écran (ou en tapant "paroles" au clavier sur ordinateur), puis
-         saisie du code sur le digicode circulaire.
-         Le code d'accès n'est pas écrit en clair ici : il est récupéré
-         au chargement depuis le Worker Cloudflare, pour ne pas apparaître
-         dans le code source de la page.
-         ═══════════════════════════════════════════════════════════════ */
-      (function initParolesAdmin() {
-        const talcoLyricsFirebaseConfig = {
-          apiKey: "AIzaSyDnLgFD3135InWkIUrzKhM1FInEoeaq34w",
-          authDomain: "enseignement---community.firebaseapp.com",
-          databaseURL: "https://enseignement---community-default-rtdb.europe-west1.firebasedatabase.app",
-          projectId: "enseignement---community",
-          storageBucket: "enseignement---community.firebasestorage.app",
-          messagingSenderId: "458371546827",
-          appId: "1:458371546827:web:b0c3e370bb6c88c407e54e",
-          measurementId: "G-628BS8SGNE"
-        };
-        const PAROLES_WORKER_URL = "https://lyrics.otu-claudeai.workers.dev/";
-        const PAROLES_CODE_LEN = 11;
-
-        let lyricsApp = null, db = null, auth = null;
-        try {
-          lyricsApp = firebase.initializeApp(talcoLyricsFirebaseConfig, "lyricsApp");
-          db = lyricsApp.firestore();
-          auth = lyricsApp.auth();
-        } catch (e) { console.error("[Paroles] Firebase init impossible", e); }
-
-        let PAROLES_CODE = null;
-        fetch(PAROLES_WORKER_URL, { cache: "no-store" })
-          .then(r => r.json())
-          .then(d => { if (d && typeof d.code === "string") PAROLES_CODE = d.code; })
-          .catch(e => console.error("[Paroles] Impossible de récupérer le code depuis Cloudflare", e));
-
-        function sanitizeDocId(title) {
-          return (title || "sans-titre").trim().replace(/[\/#\$\[\]\.]/g, "_").slice(0, 300) || "sans-titre";
-        }
-
-        /* ---- Synchronise au chargement les paroles déjà enregistrées ---- */
-        async function syncAllLyrics() {
-          if (!db || typeof TRACKS === "undefined") return;
-          try {
-            const snap = await db.collection("lyrics").get();
-            let changedCurrent = false;
-            snap.forEach(doc => {
-              const data = doc.data();
-              if (!data || typeof data.lyrics !== "string" || !data.title) return;
-              const track = TRACKS.find(t => t.title === data.title);
-              if (track && track.lyrics !== data.lyrics) {
-                track.lyrics = data.lyrics;
-                if (typeof cur !== "undefined" && TRACKS[cur] === track) changedCurrent = true;
-              }
-            });
-            if (changedCurrent && typeof renderLyrics === "function" && typeof cur !== "undefined") {
-              renderLyrics(TRACKS[cur]);
-            }
-          } catch (e) { console.error("[Paroles] Synchronisation impossible", e); }
-        }
-        if (document.readyState === "complete") setTimeout(syncAllLyrics, 300);
-        else window.addEventListener("load", () => setTimeout(syncAllLyrics, 300));
-
-        /* ---- Styles du panneau ---- */
-        const paStyle = document.createElement("style");
-        paStyle.textContent = `
-        .pa-trigger{position:fixed;bottom:0;right:0;width:64px;height:64px;z-index:99998;background:transparent;}
-        .pa-overlay{position:fixed;inset:0;background:#000;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 1.2rem;box-sizing:border-box;font-family:inherit;}
-        .pa-hidden{display:none !important;}
-        .pa-title{color:#fff;font-size:.95rem;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-bottom:1.6rem;text-align:center;}
-        .pa-display{min-height:2.2rem;color:#fff;font-size:1.6rem;letter-spacing:.5rem;margin-bottom:2rem;font-family:monospace;text-align:center;}
-        .pa-display.pa-shake{animation:pa-shake .4s;}
-        @keyframes pa-shake{0%,100%{transform:translateX(0);}20%{transform:translateX(-10px);}40%{transform:translateX(10px);}60%{transform:translateX(-6px);}80%{transform:translateX(6px);}}
-        .pa-keypad{display:grid;grid-template-columns:repeat(3,72px);gap:16px;}
-        .pa-key{width:72px;height:72px;border-radius:50%;background:#fff;color:#000;border:none;font-size:1.4rem;font-weight:600;display:flex;align-items:center;justify-content:center;cursor:pointer;}
-        .pa-key:active{background:#ccc;}
-        .pa-key.pa-ghost{background:transparent;color:#fff;font-size:1rem;box-shadow:none;}
-        .pa-close{position:absolute;top:1.1rem;right:1.1rem;color:#fff;background:none;border:none;font-size:1.7rem;line-height:1;cursor:pointer;}
-        .pa-list-wrap,.pa-editor-wrap{width:100%;max-width:640px;height:100%;display:flex;flex-direction:column;}
-        .pa-search{width:100%;padding:.7rem 1rem;border-radius:10px;border:1px solid #333;background:#111;color:#fff;font-size:.9rem;margin:1rem 0;box-sizing:border-box;}
-        .pa-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
-        .pa-item{display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.8rem .5rem;border-bottom:1px solid #1c1c1c;color:#fff;cursor:pointer;font-size:.85rem;}
-        .pa-item small{color:#888;margin-left:.5rem;font-size:.75rem;}
-        .pa-status{font-size:.72rem;color:#4ade80;flex:none;border:1px solid #2a4;border-radius:20px;padding:.3rem .7rem;white-space:nowrap;background:rgba(74,222,128,.08);}
-        .pa-status.pa-empty{color:#aaa;border-color:#444;background:rgba(255,255,255,.05);}
-        .pa-editor-title{color:#fff;font-size:1.05rem;margin:.8rem 0 .2rem;font-weight:600;}
-        .pa-editor-sub{color:#888;font-size:.78rem;margin-bottom:1rem;}
-        .pa-textarea{flex:1;width:100%;background:#111;color:#fff;border:1px solid #333;border-radius:10px;padding:.9rem;font-size:.88rem;line-height:1.5;box-sizing:border-box;resize:none;font-family:inherit;}
-        .pa-save-status{margin-top:.7rem;font-size:.78rem;color:#4ade80;min-height:1.1rem;}
-        `;
-        document.head.appendChild(paStyle);
-
-        /* ---- Déclencheur caché ---- */
-        const paTrigger = document.createElement("div");
-        paTrigger.className = "pa-trigger";
-        document.body.appendChild(paTrigger);
-        let paTapCount = 0, paTapTimer = null;
-        paTrigger.addEventListener("click", () => {
-          paTapCount++;
-          clearTimeout(paTapTimer);
-          paTapTimer = setTimeout(() => { paTapCount = 0; }, 4000);
-          if (paTapCount >= 7) { paTapCount = 0; openDigicode(); }
-        });
-        let paKbBuffer = "";
-        window.addEventListener("keydown", e => {
-          if (e.key.length !== 1) return;
-          paKbBuffer = (paKbBuffer + e.key.toLowerCase()).slice(-7);
-          if (paKbBuffer === "paroles") { paKbBuffer = ""; openDigicode(); }
-        });
-
-        /* ---- Digicode ---- */
-        let paEnteredCode = "";
-        const paDigiOverlay = document.createElement("div");
-        paDigiOverlay.className = "pa-overlay pa-hidden";
-        paDigiOverlay.innerHTML =
-          '<button class="pa-close" data-pa-close-digi>&times;</button>' +
-          '<div class="pa-title">Code d\u2019acc\u00e8s</div>' +
-          '<div class="pa-display" id="paDisplay"></div>' +
-          '<div class="pa-keypad" id="paKeypad"></div>';
-        document.body.appendChild(paDigiOverlay);
-        const paKeypad = paDigiOverlay.querySelector("#paKeypad");
-        const paDisplay = paDigiOverlay.querySelector("#paDisplay");
-        ["1", "2", "3", "4", "5", "6", "7", "8", "9", "\u232b", "0", "ghost"].forEach(k => {
-          const btn = document.createElement("button");
-          if (k === "ghost") { btn.className = "pa-key pa-ghost"; btn.disabled = true; }
-          else {
-            btn.className = "pa-key" + (k === "\u232b" ? " pa-ghost" : "");
-            btn.textContent = k;
-            btn.addEventListener("click", () => {
-              if (k === "\u232b") paEnteredCode = paEnteredCode.slice(0, -1);
-              else if (paEnteredCode.length < PAROLES_CODE_LEN) paEnteredCode += k;
-              updateDigiDisplay();
-            });
-          }
-          paKeypad.appendChild(btn);
-        });
-        async function updateDigiDisplay() {
-          paDisplay.textContent = "\u2022".repeat(paEnteredCode.length);
-          if (paEnteredCode.length >= PAROLES_CODE_LEN) {
-            if (PAROLES_CODE && paEnteredCode === PAROLES_CODE) {
-              closeDigicode();
-              if (auth) { try { await auth.signInAnonymously(); } catch (e) { console.error("[Paroles] Connexion anonyme impossible", e); } }
-              openLyricsList();
-            } else {
-              paDisplay.classList.add("pa-shake");
-              setTimeout(() => { paDisplay.classList.remove("pa-shake"); paEnteredCode = ""; paDisplay.textContent = ""; }, 400);
-            }
-          }
-        }
-        function openDigicode() { paEnteredCode = ""; paDisplay.textContent = ""; paDigiOverlay.classList.remove("pa-hidden"); }
-        function closeDigicode() { paDigiOverlay.classList.add("pa-hidden"); }
-        // Exposé pour le bouton "Paroles" du menu ⚙️ de Cosmic.
-        window.talcoOpenParolesDigicode = openDigicode;
-        paDigiOverlay.querySelector("[data-pa-close-digi]").addEventListener("click", closeDigicode);
-
-        /* ---- Liste des titres ---- */
-        const paListOverlay = document.createElement("div");
-        paListOverlay.className = "pa-overlay pa-hidden";
-        paListOverlay.innerHTML =
-          '<button class="pa-close" data-pa-close-list>&times;</button>' +
-          '<div class="pa-list-wrap">' +
-          '<div class="pa-title" style="margin-bottom:0;">Paroles</div>' +
-          '<input type="text" class="pa-search" id="paSearch" placeholder="Rechercher un titre ou un artiste...">' +
-          '<div class="pa-list" id="paList"></div>' +
-          "</div>";
-        document.body.appendChild(paListOverlay);
-        paListOverlay.querySelector("[data-pa-close-list]").addEventListener("click", () => paListOverlay.classList.add("pa-hidden"));
-        const paSearch = paListOverlay.querySelector("#paSearch");
-        const paList = paListOverlay.querySelector("#paList");
-        function paHasLyrics(t) {
-          const l = (t.lyrics || "").trim();
-          return !!l && !/^aucune parole/i.test(l) && !/^paroles non disponible/i.test(l);
-        }
-        function renderParolesList(filter) {
-          if (typeof TRACKS === "undefined") { paList.innerHTML = ""; return; }
-          const f = (filter || "").toLowerCase();
-          paList.innerHTML = "";
-          TRACKS.forEach((t, idx) => {
-            if (f && !(t.title.toLowerCase().includes(f) || (t.artist || "").toLowerCase().includes(f))) return;
-            const row = document.createElement("div");
-            row.className = "pa-item";
-            row.innerHTML =
-              "<span>" + (t.emoji || "") + " " + t.title + " <small>" + (t.artist || "") + "</small></span>" +
-              '<span class="pa-status ' + (paHasLyrics(t) ? "" : "pa-empty") + '">' + (paHasLyrics(t) ? "\u270e Modifier" : "+ Ajouter parole") + "</span>";
-            row.addEventListener("click", () => openEditor(idx));
-            paList.appendChild(row);
-          });
-        }
-        paSearch.addEventListener("input", () => renderParolesList(paSearch.value));
-        function openLyricsList() {
-          paSearch.value = "";
-          renderParolesList("");
-          paListOverlay.classList.remove("pa-hidden");
-          setTimeout(() => paSearch.focus(), 50);
-        }
-
-        /* ---- Éditeur de paroles ---- */
-        const paEditorOverlay = document.createElement("div");
-        paEditorOverlay.className = "pa-overlay pa-hidden";
-        paEditorOverlay.innerHTML =
-          '<button class="pa-close" data-pa-close-editor>&times;</button>' +
-          '<div class="pa-editor-wrap">' +
-          '<div class="pa-editor-title" id="paEditTitle"></div>' +
-          '<div class="pa-editor-sub" id="paEditSub"></div>' +
-          '<textarea class="pa-textarea" id="paTextarea" placeholder="Colle les paroles ici — enregistrement automatique"></textarea>' +
-          '<div class="pa-save-status" id="paSaveStatus"></div>' +
-          "</div>";
-        document.body.appendChild(paEditorOverlay);
-        paEditorOverlay.querySelector("[data-pa-close-editor]").addEventListener("click", () => {
-          paEditorOverlay.classList.add("pa-hidden");
-          paListOverlay.classList.remove("pa-hidden");
-        });
-        const paTextarea = paEditorOverlay.querySelector("#paTextarea");
-        const paSaveStatus = paEditorOverlay.querySelector("#paSaveStatus");
-        let paCurrentIdx = -1, paSaveDebounce = null;
-
-        function openEditor(idx) {
-          paCurrentIdx = idx;
-          const t = TRACKS[idx];
-          paEditorOverlay.querySelector("#paEditTitle").textContent = t.title;
-          paEditorOverlay.querySelector("#paEditSub").textContent = t.artist || "";
-          paTextarea.value = paHasLyrics(t) ? t.lyrics : "";
-          paSaveStatus.textContent = "";
-          paListOverlay.classList.add("pa-hidden");
-          paEditorOverlay.classList.remove("pa-hidden");
-          setTimeout(() => paTextarea.focus(), 50);
-        }
-
-        async function persistLyrics() {
-          if (paCurrentIdx < 0 || !db) return;
-          const t = TRACKS[paCurrentIdx];
-          const text = paTextarea.value;
-          t.lyrics = text;
-          paSaveStatus.textContent = "Enregistrement...";
-          try {
-            if (auth && !auth.currentUser) { try { await auth.signInAnonymously(); } catch (e) { /* on tente quand même l'écriture */ } }
-            await db.collection("lyrics").doc(sanitizeDocId(t.title)).set({
-              title: t.title,
-              lyrics: text,
-              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            paSaveStatus.textContent = "Enregistré \u2713";
-            if (typeof cur !== "undefined" && TRACKS[cur] === t && typeof renderLyrics === "function") {
-              renderLyrics(t);
-            }
-          } catch (e) {
-            console.error("[Paroles] Échec de l'enregistrement", e);
-            paSaveStatus.textContent = "Échec de l'enregistrement";
-          }
-        }
-        function paScheduleSave() {
-          clearTimeout(paSaveDebounce);
-          paSaveStatus.textContent = "Modification...";
-          paSaveDebounce = setTimeout(persistLyrics, 900);
-        }
-        paTextarea.addEventListener("input", paScheduleSave);
-        paTextarea.addEventListener("paste", () => setTimeout(persistLyrics, 50));
-      })();
-
+      /* Note : la fonctionnalite "Paroles" (panneau cache d'edition des
+         paroles, digicode, Firebase) est implementee dans le template
+         Cosmic (cosmicAppTemplate), pas ici : le bouton qui la declenche
+         vit dans l'iframe du lecteur de musique, qui a son propre objet
+         window, distinct de celui de cette page. */
     }
   </script>
 </body>
