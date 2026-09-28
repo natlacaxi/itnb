@@ -2,6 +2,7 @@
 <html lang="fr">
 
 <head>
+  <script>try{if(localStorage.getItem('talcoitn_session'))document.write('<style>#authGate{display:none!important}</style>');}catch(e){}</script>
   <script>window._d = window._d || function (s) { return atob(s); };</script>
   <meta charset="UTF-8">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -475,6 +476,11 @@
       padding: 4px;
       margin-bottom: 1.3rem;
       position: relative;
+      touch-action: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .gate-tab {
@@ -1191,6 +1197,14 @@
       opacity: 0;
       animation: navRise .6s .15s var(--ease-spring) forwards;
       transition: padding .3s var(--ease);
+      /* Empêche le navigateur mobile d'interpréter l'appui long / le glissement
+         comme une sélection de texte (loupe + curseurs), ce qui bloquait le
+         drag de la pastille "liquid glass" sur téléphone. */
+      touch-action: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .menu-slider {
@@ -2003,6 +2017,11 @@
       border-radius: var(--radius-md);
       margin-bottom: .7rem;
       position: relative;
+      touch-action: none;
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
 
     .submenu-slider {
@@ -2745,26 +2764,22 @@
   </div>
 
   <div id="adminContactOverlay"
-    style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
-    <div
-      style="background:#15121f;border:1px solid rgba(255,255,255,.1);border-radius:18px;max-width:420px;width:90%;padding:1.5rem;color:#fff;font-family:inherit;box-shadow:0 20px 60px rgba(0,0,0,.5);">
-      <h3 style="margin:0 0 .6rem;font-size:1.1rem;">📧 Contacter l'administration</h3>
-      <p style="opacity:.75;font-size:.85rem;line-height:1.5;margin:0 0 1rem;">Le mode invité est désactivé. Pour
-        obtenir un code d'accès, envoie un mail à <b>talcoitn@gmail.com</b>, ou clique sur le bouton ci-dessous pour
-        ouvrir ta messagerie avec le message déjà prêt.</p>
-      <div
-        style="background:rgba(255,255,255,.05);border-radius:10px;padding:.7rem .9rem;font-size:.8rem;opacity:.85;margin-bottom:1rem;white-space:pre-wrap;max-height:160px;overflow:auto;"
-        id="adminContactPreview"></div>
-      <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
-        <a id="adminContactMailBtn" href="#"
-          style="flex:1;text-align:center;text-decoration:none;background:linear-gradient(135deg,#7c5cff,#ff5fa8);color:#fff;padding:.6rem 1rem;border-radius:10px;font-size:.85rem;font-weight:600;">Ouvrir
-          ma messagerie</a>
-        <button id="adminContactCopyBtn" type="button"
-          style="flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;padding:.6rem 1rem;border-radius:10px;font-size:.85rem;cursor:pointer;">Copier
-          l'adresse</button>
+    style="display:none;position:fixed;inset:0;z-index:9999;background:#0a0a10;">
+    <div style="position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+      <div style="max-width:480px;margin:0 auto;min-height:100%;padding:1.5rem 1.3rem calc(1.5rem + env(safe-area-inset-bottom));display:flex;flex-direction:column;color:#fff;font-family:inherit;box-sizing:border-box;">
+        <button id="adminContactCloseBtn" type="button"
+          style="align-self:flex-start;background:none;border:none;color:rgba(255,255,255,.6);font-size:.9rem;cursor:pointer;padding:.5rem 0;margin-bottom:.5rem;">← Retour</button>
+        <h2 style="margin:.5rem 0 .4rem;font-size:1.3rem;">📧 Contacter l'administrateur</h2>
+        <p style="opacity:.75;font-size:.85rem;line-height:1.55;margin:0 0 1.4rem;">Renseigne les infos ci-dessous,
+          puis clique sur « Envoyer ». Ta messagerie s'ouvrira avec un mail déjà rempli à destination de
+          <b>talcoitn@gmail.com</b>.</p>
+        <form id="adminContactForm" style="display:flex;flex-direction:column;gap:.9rem;flex:1;">
+          <input class="gate-field" type="text" id="adminContactName" placeholder="Pseudo souhaité" autocomplete="off">
+          <textarea id="adminContactReason" class="gate-field" placeholder="Motif de la demande" rows="6"
+            style="resize:vertical;min-height:120px;font-family:inherit;"></textarea>
+          <button class="gate-btn" type="submit" id="adminContactSubmitBtn">Envoyer</button>
+        </form>
       </div>
-      <button id="adminContactCloseBtn" type="button"
-        style="margin-top:.8rem;width:100%;background:none;border:none;color:rgba(255,255,255,.5);font-size:.8rem;cursor:pointer;padding:.4rem;">Fermer</button>
     </div>
   </div>
 
@@ -2772,27 +2787,21 @@
     (function () {
       const ADMIN_EMAIL = 'talcoitn@gmail.com';
       const ADMIN_SUBJECT = "Demande de code d'accès TalcoITN";
-      const ADMIN_BODY = "Bonjour,\n\nJe souhaite obtenir un code d'accès (ou la création d'un compte) pour utiliser le portail TalcoITN.\n\nMon pseudo souhaité : \nMotif de la demande : \n\nMerci d'avance,";
       window.openAdminContactModal = function () {
-        const overlay = document.getElementById('adminContactOverlay');
-        document.getElementById('adminContactPreview').textContent = 'À : ' + ADMIN_EMAIL + '\nObjet : ' + ADMIN_SUBJECT + '\n\n' + ADMIN_BODY;
-        document.getElementById('adminContactMailBtn').href = 'mailto:' + ADMIN_EMAIL
-          + '?subject=' + encodeURIComponent(ADMIN_SUBJECT)
-          + '&body=' + encodeURIComponent(ADMIN_BODY);
-        overlay.style.display = 'flex';
+        document.getElementById('adminContactOverlay').style.display = 'block';
       };
       function closeAdminContactModal() { document.getElementById('adminContactOverlay').style.display = 'none'; }
       document.getElementById('adminContactCloseBtn').addEventListener('click', closeAdminContactModal);
-      document.getElementById('adminContactOverlay').addEventListener('click', (e) => { if (e.target.id === 'adminContactOverlay') closeAdminContactModal(); });
-      document.getElementById('adminContactCopyBtn').addEventListener('click', async () => {
-        const btn = document.getElementById('adminContactCopyBtn');
-        try {
-          await navigator.clipboard.writeText(ADMIN_EMAIL);
-          btn.textContent = 'Adresse copiée ✓';
-        } catch (e) {
-          btn.textContent = ADMIN_EMAIL;
-        }
-        setTimeout(() => { btn.textContent = "Copier l'adresse"; }, 2000);
+      document.getElementById('adminContactForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const pseudo = document.getElementById('adminContactName').value.trim();
+        const motif = document.getElementById('adminContactReason').value.trim();
+        const body = "Bonjour,\n\nJe souhaite obtenir un code d'accès (ou la création d'un compte) pour utiliser le portail TalcoITN.\n\nMon pseudo souhaité : " + pseudo + "\nMotif de la demande : " + motif + "\n\nMerci d'avance,";
+        const mailtoUrl = 'mailto:' + ADMIN_EMAIL
+          + '?subject=' + encodeURIComponent(ADMIN_SUBJECT)
+          + '&body=' + encodeURIComponent(body);
+        // Bascule vers le client mail une fois le formulaire rempli.
+        window.location.href = mailtoUrl;
       });
     })();
   </script>
@@ -2847,7 +2856,7 @@
       </div>
       <h1 class="gate-logo">TalcoITN</h1>
       <div class="gate-sub">Talco IT Networks (ITN)</div>
-      <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 161.5</div>
+      <div class="gate-sub" style="margin-top:.2rem;opacity:.6;">Version 171.7</div>
     </div>
 
     <div class="gate-card glass">
@@ -2903,11 +2912,13 @@
         <input class="gate-field" type="text" id="signupAdminCode" placeholder="Code admin (AAAA000000)"
           autocomplete="off" style="text-transform:uppercase;">
         <button class="gate-btn" id="btnSignup">Créer mon compte</button>
+        <button type="button" class="gate-btn ghost" id="btnContactAdmin"
+          style="margin-top:.6rem;">Contactez l'administrateur</button>
       </div>
 
       <button class="gate-btn ghost" id="btnGuest">Continuer en invité</button>
-      <div class="gate-guest-note">🔒 Mode invité désactivé pour des raisons de sécurité.<br>Un compte TalcoITN
-        est requis pour accéder au portail.</div>
+      <div class="gate-guest-note">🔒 Mode invité en accès restreint : navigation uniquement, un compte TalcoITN
+        est requis pour exploiter chaque module.</div>
     </div>
 
     <div class="gate-fw-note" id="fwNote">Connexion via Firebase Authentication (par pseudo). Renseignez votre
@@ -14876,7 +14887,7 @@ window.addEventListener('load', () => {
       btn.disabled = false;
       btn.style.opacity = '';
       btn.style.cursor = 'pointer';
-      btn.textContent = "Contactez l'administration";
+      btn.textContent = 'Continuer en invité';
     }
 
     function positionGateTabBg() {
@@ -15034,6 +15045,9 @@ window.addEventListener('load', () => {
     }
 
     document.getElementById('btnGuest').addEventListener('click', () => {
+      runAuthProgress([{ label: 'Connexion invité', duration: 600 }], () => enterApp({ name: 'Invité', guest: true }));
+    });
+    document.getElementById('btnContactAdmin').addEventListener('click', () => {
       openAdminContactModal();
     });
 
@@ -15067,11 +15081,30 @@ window.addEventListener('load', () => {
       requestAnimationFrame(nextStep);
     }
 
-    function enterApp(user) {
+    function enterApp(user, opts) {
+      opts = opts || {};
+      // Mémorise la session (comptes uniquement) : au rechargement on reste connecté,
+      // seule la déconnexion ramène à la page de connexion.
+      if (!user.guest && user.pass) {
+        try { localStorage.setItem('talcoitn_session', JSON.stringify({ name: user.name, email: user.email, uid: user.uid, pass: user.pass })); } catch (e) { }
+      }
+      if (opts.instant) { doEnterApp(user); return; }
+      // Transition : fondu vers le noir (0,5 s) sur la connexion, puis apparition côté ITN (0,5 s)
+      const veil = document.createElement('div');
+      veil.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;z-index:2147483000;transition:opacity .5s ease;pointer-events:none;';
+      document.body.appendChild(veil);
+      requestAnimationFrame(() => requestAnimationFrame(() => { veil.style.opacity = '1'; }));
+      setTimeout(() => {
+        doEnterApp(user);
+        requestAnimationFrame(() => { veil.style.opacity = '0'; });
+        setTimeout(() => veil.remove(), 600);
+      }, 520);
+    }
+
+    function doEnterApp(user) {
       user.isAdmin = !user.guest && !!user.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
       currentUser = user;
-      gate.style.opacity = '0'; gate.style.transform = 'scale(1.03)';
-      setTimeout(() => { gate.style.display = 'none'; }, 500);
+      gate.style.display = 'none';
       appEl.style.display = 'flex';
       requestAnimationFrame(() => appEl.classList.add('show'));
       document.getElementById('userChip').textContent = (user.guest ? 'Invité' : (user.name || user.email)) + (user.isAdmin ? ' 👑' : '');
@@ -15478,6 +15511,12 @@ window.addEventListener('load', () => {
 
     function openModule(id, sub) {
       const mod = MODULES.find(m => m.id === id); if (!mod) return;
+      // Verrou central mode invité : aucun module n'est exploitable sans compte,
+      // quel que soit le module (y compris ceux ajoutés plus tard).
+      if (currentUser && currentUser.guest) {
+        itnAlert('🔒 Compte requis pour exploiter ce module.');
+        return;
+      }
       setPresence(id === 'exchange' ? 'green' : 'orange');
       document.getElementById('homeView').classList.remove('show');
       setTimeout(() => { document.getElementById('homeView').style.display = 'none'; }, 200);
@@ -22037,7 +22076,7 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
         const now = !notifOn; Store.set('talcoitn_notifon', now); renderSettings();
         logHistory(`Notifications : ${now ? 'activées' : 'désactivées'}`);
       });
-      document.getElementById('setLogout').addEventListener('click', () => { logHistory('Déconnexion'); location.reload(); });
+      document.getElementById('setLogout').addEventListener('click', () => { logHistory('Déconnexion'); try { localStorage.removeItem('talcoitn_session'); } catch (e) { } location.reload(); });
       // Le vidage de l'historique local a été désactivé volontairement (interdit).
 
       /* ---- Page de démarrage (démo) ---- */
@@ -22445,6 +22484,16 @@ p{color:#8a8aa0;font-size:.82rem;line-height:1.6;}
          vit dans l'iframe du lecteur de musique, qui a son propre objet
          window, distinct de celui de cette page. */
     }
+  </script>
+  <script>
+    // Reprise de session : connecté tant qu'on ne s'est pas déconnecté
+    (function () {
+      let sess = null;
+      try { sess = JSON.parse(localStorage.getItem('talcoitn_session') || 'null'); } catch (e) { }
+      if (!sess || !sess.email) return;
+      try { enterApp({ name: sess.name, email: sess.email, uid: sess.uid, pass: sess.pass, guest: false }, { instant: true }); }
+      catch (e) { console.warn('Reprise de session impossible :', e); try { localStorage.removeItem('talcoitn_session'); } catch (_) { } location.reload(); }
+    })();
   </script>
 </body>
 
