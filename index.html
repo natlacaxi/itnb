@@ -9328,6 +9328,97 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 }
             }
 
+            /* ── FIX MOBILE : plus de débordement horizontal ──
+               Causes : colonne de grille "1fr" (= minmax(auto,1fr)) qui s'élargit
+               au contenu, mini-lecteur trop large (info 105px + volume + temps),
+               et hauteur en dvh calculée hors de l'iframe. */
+            @media(max-width: 768px) {
+                html,body {
+                    width: 100%;
+                    max-width: 100%;
+                    overflow: hidden;
+                    overscroll-behavior: none;
+                    -webkit-text-size-adjust: 100%;
+                }
+
+                .app {
+                    grid-template-columns: minmax(0,1fr)!important;
+                    height: 100%!important;
+                    width: 100%;
+                    max-width: 100%;
+                }
+
+                .topbar,.main,.mini-player,.nav-bar,.hero,.hero-info {
+                    min-width: 0;
+                    max-width: 100%;
+                }
+
+                .topbar {
+                    overflow: hidden;
+                }
+
+                .hero-info {
+                    width: 100%;
+                }
+
+                .hero-title,.hero-artist,.np-title,.np-artist {
+                    overflow-wrap: anywhere;
+                }
+
+                .tracks-grid {
+                    grid-template-columns: repeat(2,minmax(0,1fr))!important;
+                }
+
+                .tcard {
+                    min-width: 0;
+                }
+
+                /* Mini-lecteur façon Spotify : pochette | titre (flexible) | ⏮ ⏯ ⏭ */
+                .mini-player {
+                    gap: 0.6rem;
+                    padding: 0 0.7rem;
+                    overflow: hidden;
+                }
+
+                .mp-art {
+                    width: 42px;
+                    height: 42px;
+                    border-radius: 10px;
+                }
+
+                .mp-info {
+                    flex: 1 1 0!important;
+                    min-width: 0!important;
+                }
+
+                .mp-center {
+                    flex: 0 0 auto;
+                    min-width: 0;
+                }
+
+                .mp-prog-time {
+                    display: none;
+                }
+
+                .mp-prog {
+                    min-width: 0;
+                }
+
+                .mp-right {
+                    display: none!important;
+                }
+
+                .nav-pill {
+                    min-width: 0;
+                    overflow: hidden;
+                }
+
+                .nav-btn {
+                    min-width: 0;
+                    flex: 1 1 0;
+                }
+            }
+
             @supports(padding-bottom: env(safe-area-inset-bottom)) {
                 .nav-bar {
                     padding-bottom:max(4px,env(safe-area-inset-bottom));
@@ -10477,6 +10568,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 try {
                     window.parent.postMessage({ type: 'talco-now-playing', title: t.title, artist: artistOk ? t.artist : '' }, '*');
                 } catch (e) {}
+                try { cosmicMediaSessionUpdate(); } catch (e) {}
             }
             // Quand on quitte Cosmic (fermeture du pane, changement de module,
             // retour à l'accueil...), l'iframe est détachée/déchargée : on prévient
@@ -11771,6 +11863,114 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 }
             }
             )();
+            // ══ MEDIA SESSION — écran de verrouillage, notification, casque, Bluetooth ══
+            // Affiche titre / artiste / pochette et branche ⏮ ⏯ ⏭ + barre de
+            // progression, comme Spotify. Rien n'est affiché tant qu'aucun
+            // morceau n'a été lancé (donc pas de notification "toute seule").
+            const cosmicMediaArtCache = {};
+            function cosmicMediaArtwork(t) {
+                const key = (t.g && t.g[0]) + '|' + (t.g && t.g[1]) + '|' + t.emoji;
+                if (cosmicMediaArtCache[key]) return cosmicMediaArtCache[key];
+                try {
+                    const c = document.createElement('canvas');
+                    c.width = c.height = 512;
+                    const x = c.getContext('2d');
+                    const g = x.createLinearGradient(0, 0, 512, 512);
+                    g.addColorStop(0, (t.g && t.g[0]) || '#374151');
+                    g.addColorStop(1, (t.g && t.g[1]) || '#6b7280');
+                    x.fillStyle = g;
+                    x.fillRect(0, 0, 512, 512);
+                    x.font = '240px serif';
+                    x.textAlign = 'center';
+                    x.textBaseline = 'middle';
+                    x.fillText(t.emoji || '🎵', 256, 280);
+                    return (cosmicMediaArtCache[key] = c.toDataURL('image/png'));
+                } catch (e) {
+                    return null;
+                }
+            }
+            let cosmicMediaLastPos = 0;
+            function cosmicMediaPosition(force) {
+                if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+                const d = aud.duration;
+                if (!isFinite(d) || d <= 0) return;
+                const now = Date.now();
+                if (!force && now - cosmicMediaLastPos < 1000) return;
+                cosmicMediaLastPos = now;
+                try {
+                    navigator.mediaSession.setPositionState({
+                        duration: d,
+                        playbackRate: aud.playbackRate || 1,
+                        position: Math.min(Math.max(aud.currentTime || 0, 0), d)
+                    });
+                } catch (e) {}
+            }
+            function cosmicMediaSessionUpdate() {
+                if (!('mediaSession' in navigator) || !aud.src) return;
+                const t = TRACKS[cur];
+                if (!t) return;
+                const artistOk = t.artist && t.artist.trim() && t.artist.trim() !== '—';
+                const art = cosmicMediaArtwork(t);
+                try {
+                    navigator.mediaSession.metadata = new MediaMetadata({
+                        title: t.title,
+                        artist: artistOk ? t.artist : 'Cosmic',
+                        album: 'Cosmic',
+                        artwork: art ? [{ src: art, sizes: '512x512', type: 'image/png' }] : []
+                    });
+                } catch (e) {}
+                navigator.mediaSession.playbackState = aud.paused ? 'paused' : 'playing';
+                cosmicMediaPosition(true);
+            }
+            (function initCosmicMediaSession() {
+                if (!('mediaSession' in navigator)) return;
+                const ms = navigator.mediaSession;
+                const on = (action, fn) => { try { ms.setActionHandler(action, fn); } catch (e) {} };
+
+                on('play', () => {
+                    if (!aud.src) { playTrack(cur); return; }
+                    if (!playing) togglePlay(); else aud.play();
+                });
+                on('pause', () => {
+                    if (playing) togglePlay(); else aud.pause();
+                });
+                on('previoustrack', () => prevTrack());
+                on('nexttrack', () => nextTrack());
+                on('seekto', d => {
+                    if (d.seekTime == null || !isFinite(aud.duration)) return;
+                    if (d.fastSeek && typeof aud.fastSeek === 'function') aud.fastSeek(d.seekTime);
+                    else aud.currentTime = d.seekTime;
+                    cosmicMediaPosition(true);
+                });
+                on('stop', () => {
+                    if (playing) togglePlay();
+                    aud.currentTime = 0;
+                    cosmicMediaPosition(true);
+                });
+
+                // Garde l'UI et le système synchronisés (pause par le casque, un
+                // appel entrant, la notification...).
+                aud.addEventListener('loadstart', cosmicMediaSessionUpdate);
+                aud.addEventListener('loadedmetadata', () => cosmicMediaPosition(true));
+                aud.addEventListener('durationchange', () => cosmicMediaPosition(true));
+                aud.addEventListener('seeked', () => cosmicMediaPosition(true));
+                aud.addEventListener('ratechange', () => cosmicMediaPosition(true));
+                aud.addEventListener('timeupdate', () => cosmicMediaPosition(false));
+                aud.addEventListener('play', () => {
+                    if (!playing) { playing = true; updateIcons(); }
+                    ms.playbackState = 'playing';
+                });
+                aud.addEventListener('pause', () => {
+                    // évite l'évènement "pause" parasite de playTrack() (pause puis play)
+                    if (!aud.paused || aud.ended) return;
+                    if (playing) { playing = false; updateIcons(); }
+                    ms.playbackState = 'paused';
+                });
+                window.addEventListener('pagehide', () => {
+                    try { ms.metadata = null; ms.playbackState = 'none'; } catch (e) {}
+                });
+            })();
+
             // Plus d'auto-play au chargement : ça déclenchait une lecture audio
             // sans geste utilisateur, qui faisait apparaître la notification
             // média du téléphone (verrouillage / centre de contrôle) toute
