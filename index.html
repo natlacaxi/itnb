@@ -10690,9 +10690,12 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 el.classList.remove('is-overflowing');
                 el.style.removeProperty('--cm-dur');
                 const safe = cosmicMqEscape(text == null ? '' : text);
+                // Une SEULE copie du texte par defaut : la 2e copie (necessaire pour
+                // boucler le defilement) n'est ajoutee que si le titre deborde
+                // vraiment (cf. cosmicMeasureMarquee) — sinon le titre s'affichait
+                // deux fois cote a cote des qu'il tenait dans l'espace disponible.
                 el.innerHTML = '<span class="cosmic-marquee-track">' +
                     '<span class="cosmic-marquee-seg">' + safe + '</span>' +
-                    '<span class="cosmic-marquee-seg" aria-hidden="true">' + safe + '</span>' +
                     '</span>';
                 if (cosmicMqEls.indexOf(el) === -1) cosmicMqEls.push(el);
                 cosmicMeasureMarquee(el);
@@ -10700,14 +10703,21 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
             function cosmicMeasureMarquee(el) {
                 if (!el || !el.isConnected) return;
                 requestAnimationFrame(() => {
+                    const track = el.querySelector('.cosmic-marquee-track');
                     const seg = el.querySelector('.cosmic-marquee-seg');
-                    if (!seg) return;
+                    if (!track || !seg) return;
                     el.classList.remove('is-overflowing');
+                    // On remesure toujours sur UNE seule copie (retire une 2e copie
+                    // ajoutee lors d'une mesure precedente, ex: apres redimensionnement).
+                    while (track.children.length > 1) track.removeChild(track.lastChild);
                     const overflow = seg.scrollWidth - el.clientWidth;
                     if (overflow > 6) {
                         const speed = 36; // px/s : vitesse constante quelle que soit la longueur
                         const dur = Math.max(7, (seg.scrollWidth + 42) / speed);
                         el.style.setProperty('--cm-dur', dur.toFixed(2) + 's');
+                        const clone = seg.cloneNode(true);
+                        clone.setAttribute('aria-hidden', 'true');
+                        track.appendChild(clone);
                         el.classList.add('is-overflowing');
                     }
                 });
