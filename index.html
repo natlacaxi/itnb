@@ -81,17 +81,30 @@
       const l = document.querySelector('link[rel="icon"]');
       if (l) TALCO_DEFAULT_FAVICON_HREF = l.href;
     });
+    // Remplace le(s) <link rel="icon"> par un NOEUD NEUF plutôt que de
+    // modifier .href en place : certains navigateurs (Chrome en tête)
+    // n'actualisent pas fiablement l'onglet quand on réécrit juste le href
+    // d'un <link> déjà présent (l'icône peut clignoter, rester bloquée sur
+    // l'ancienne, ou disparaître un instant) — recréer le noeud force le
+    // rafraîchissement à chaque changement de titre, de façon fluide.
+    function talcoSetFavicon(href, type) {
+      document.querySelectorAll('link[rel="icon"]').forEach(n => n.remove());
+      const link = document.createElement('link');
+      link.rel = 'icon';
+      link.type = type || 'image/svg+xml';
+      link.href = href;
+      document.head.appendChild(link);
+      return link;
+    }
     window.addEventListener('message', function (e) {
       const d = e.data;
       if (!d || !d.type || d.type.indexOf('talco-now-playing') !== 0) return;
-      let link = document.querySelector('link[rel="icon"]');
-      if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.head.appendChild(link); }
       if (d.type === 'talco-now-playing-stop') {
         // Le module (ex: Cosmic) a été fermé/quitté : on remet le titre et
         // le favicon d'origine de TalcoITN au lieu de laisser traîner ceux
         // du morceau qui jouait.
         if (TALCO_DEFAULT_TITLE) document.title = TALCO_DEFAULT_TITLE;
-        if (TALCO_DEFAULT_FAVICON_HREF) link.href = TALCO_DEFAULT_FAVICON_HREF;
+        if (TALCO_DEFAULT_FAVICON_HREF) talcoSetFavicon(TALCO_DEFAULT_FAVICON_HREF);
         return;
       }
       // Tant qu'un morceau est actif, le titre du morceau et la note
@@ -100,8 +113,7 @@
       // pour éviter un tiret qui traîne tout seul dans l'onglet)
       const dArtistOk = d.artist && d.artist.trim() && d.artist.trim() !== '—';
       document.title = d.title + (dArtistOk ? ' — ' + d.artist : '');
-      link.type = 'image/svg+xml';
-      link.href = TALCO_NOTE_FAVICON;
+      talcoSetFavicon(TALCO_NOTE_FAVICON, 'image/svg+xml');
     });
   </script>
 
@@ -6834,6 +6846,53 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 }
             }
 
+            /* ── Centrage vertical de l'emoji : sans line-height:1, la hauteur de
+               ligne par défaut du navigateur décale visuellement le glyphe
+               vers le bas dans la boîte flex, surtout pendant l'animation
+               "spin" de lecture. ── */
+            .art-box,.mp-art,.np-art {
+                line-height: 1;
+            }
+            .art-box span,.mp-art span,.np-art span {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                line-height: 1;
+            }
+
+            /* ── Marquee TalcoITN : les 3 titres (hero/mini-player/plein écran)
+               défilent en boucle fluide dès qu'ils dépassent leur largeur,
+               au lieu d'être tronqués ou centrés. Deux copies du texte sont
+               translatées de -50% pour une boucle sans à-coup. ── */
+            .cosmic-marquee {
+                overflow: hidden;
+                white-space: nowrap;
+                display: block;
+                -webkit-mask-image: linear-gradient(90deg,#000 90%,transparent 100%);
+                mask-image: linear-gradient(90deg,#000 90%,transparent 100%);
+            }
+            .cosmic-marquee-track {
+                display: inline-flex;
+                white-space: nowrap;
+                width: max-content;
+            }
+            .cosmic-marquee.is-overflowing .cosmic-marquee-track {
+                animation: cosmicMarqueeScroll var(--cm-dur,14s) linear infinite;
+                animation-delay: 1.4s;
+            }
+            .cosmic-marquee-seg {
+                padding-right: 2.6rem;
+            }
+            @media(prefers-reduced-motion: reduce) {
+                .cosmic-marquee.is-overflowing .cosmic-marquee-track {
+                    animation: none;
+                }
+            }
+            @keyframes cosmicMarqueeScroll {
+                0%,4% { transform: translateX(0); }
+                96%,100% { transform: translateX(-50%); }
+            }
+
             .art-box {
                 width: 160px;
                 height: 160px;
@@ -6890,12 +6949,17 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 letter-spacing: -0.03em;
                 line-height: 1.1;
                 margin-bottom: 0.12rem;
+                max-width: 100%;
             }
 
             .hero-artist {
                 font-size: 0.9rem;
                 color: var(--muted);
                 margin-bottom: 0.08rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
             }
 
             .hero-date {
@@ -7342,7 +7406,7 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 font-weight: 600;
                 white-space: nowrap;
                 overflow: hidden;
-                text-overflow: ellipsis;
+                max-width: 100%;
             }
 
             .mp-artist {
@@ -8156,7 +8220,7 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
             }
 
             .np-meta {
-                text-align: center;
+                text-align: left;
                 margin-bottom: 1.2rem;
                 width: 100%;
             }
@@ -8167,11 +8231,16 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 font-weight: 800;
                 letter-spacing: -0.02em;
                 margin-bottom: 0.22rem;
+                max-width: 100%;
             }
 
             .np-artist {
                 font-size: 0.9rem;
                 color: var(--muted);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 100%;
             }
 
             .np-date {
@@ -9158,10 +9227,15 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
                 .hero {
                     flex-direction: column;
                     align-items: center;
-                    text-align: center;
+                    text-align: left;
                     padding: 1rem;
                     gap: 0.8rem;
                     border-radius: 22px;
+                }
+
+                .hero-info {
+                    width: 100%;
+                    text-align: left;
                 }
 
                 .art-stage {
@@ -9359,10 +9433,6 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
 
                 .hero-info {
                     width: 100%;
-                }
-
-                .hero-title,.hero-artist,.np-title,.np-artist {
-                    overflow-wrap: anywhere;
                 }
 
                 .tracks-grid {
@@ -10607,9 +10677,87 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 style.textContent = `.cosmic-art-bg{background-image:url("${art}");background-size:cover;background-position:center;}`;
                 document.head.appendChild(style);
             })();
+            // ══ MARQUEE — les 3 titres (hero / mini-lecteur / plein écran)
+            // défilent en boucle dès qu'ils débordent, sans être ni tronqués
+            // ni centrés. Deux copies du texte, translation continue -50%. ══
+            function cosmicMqEscape(s) {
+                return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            }
+            const cosmicMqEls = [];
+            function cosmicSetMarqueeText(el, text) {
+                if (!el) return;
+                el.classList.add('cosmic-marquee');
+                el.classList.remove('is-overflowing');
+                el.style.removeProperty('--cm-dur');
+                const safe = cosmicMqEscape(text == null ? '' : text);
+                el.innerHTML = '<span class="cosmic-marquee-track">' +
+                    '<span class="cosmic-marquee-seg">' + safe + '</span>' +
+                    '<span class="cosmic-marquee-seg" aria-hidden="true">' + safe + '</span>' +
+                    '</span>';
+                if (cosmicMqEls.indexOf(el) === -1) cosmicMqEls.push(el);
+                cosmicMeasureMarquee(el);
+            }
+            function cosmicMeasureMarquee(el) {
+                if (!el || !el.isConnected) return;
+                requestAnimationFrame(() => {
+                    const seg = el.querySelector('.cosmic-marquee-seg');
+                    if (!seg) return;
+                    el.classList.remove('is-overflowing');
+                    const overflow = seg.scrollWidth - el.clientWidth;
+                    if (overflow > 6) {
+                        const speed = 36; // px/s : vitesse constante quelle que soit la longueur
+                        const dur = Math.max(7, (seg.scrollWidth + 42) / speed);
+                        el.style.setProperty('--cm-dur', dur.toFixed(2) + 's');
+                        el.classList.add('is-overflowing');
+                    }
+                });
+            }
+            let cosmicMqResizeT = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(cosmicMqResizeT);
+                cosmicMqResizeT = setTimeout(() => cosmicMqEls.forEach(cosmicMeasureMarquee), 200);
+            });
+
+            // ══ PRÉCHARGEMENT — le morceau suivant probable est chargé en
+            // arrière-plan pendant la lecture du morceau en cours, pour un
+            // enchaînement plus fluide (moins/pas de temps de chargement au
+            // changement de piste). Best effort : en mode aléatoire, le vrai
+            // "suivant" n'est tiré qu'au moment du changement, donc ce n'est
+            // qu'une estimation, mais elle réchauffe déjà le cache réseau. ══
+            const cosmicAudPreload = new Audio();
+            cosmicAudPreload.preload = 'auto';
+            let cosmicPreloadT = null;
+            function cosmicComputeLikelyNextIdx() {
+                if (!filtered || !filtered.length) return null;
+                if (shuffle) {
+                    const pool = filtered.filter(i => i !== cur);
+                    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : (cur + 1) % TRACKS.length;
+                }
+                const pos = filtered.indexOf(cur);
+                if (pos === -1) return null;
+                return filtered[(pos + 1) % filtered.length];
+            }
+            function cosmicPreloadNext() {
+                try {
+                    const idx = cosmicComputeLikelyNextIdx();
+                    if (idx == null || !TRACKS[idx]) return;
+                    const url = TRACKS[idx].url;
+                    if (url && cosmicAudPreload.src !== url) {
+                        cosmicAudPreload.src = url;
+                        cosmicAudPreload.load();
+                    }
+                } catch (e) {}
+            }
+            function cosmicSchedulePreloadNext() {
+                clearTimeout(cosmicPreloadT);
+                // Petit délai : on laisse d'abord le morceau en cours démarrer
+                // sans lui disputer la bande passante, pour que LUI reste fluide.
+                cosmicPreloadT = setTimeout(cosmicPreloadNext, 1500);
+            }
+
             function updateUI() {
                 const t = TRACKS[cur];
-                document.getElementById('heroTitle').textContent = t.title;
+                cosmicSetMarqueeText(document.getElementById('heroTitle'), t.title);
                 document.getElementById('heroArtist').textContent = t.artist;
                 document.getElementById('heroDate').textContent = t.year || '';
                 const ha = document.getElementById('heroArt');
@@ -10620,7 +10768,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 document.querySelector('.o2').style.background = `radial-gradient(${t.g[1]},transparent 70%)`;
                 document.getElementById('mpArt').textContent = '';
                 cosmicArtStyle(document.getElementById('mpArt'), t);
-                document.getElementById('mpName').textContent = t.title;
+                cosmicSetMarqueeText(document.getElementById('mpName'), t.title);
                 document.getElementById('mpArtist').textContent = t.artist;
                 const grad = `linear-gradient(90deg,${t.g[0]},${t.g[1]})`;
                 document.getElementById('progFill').style.background = grad;
@@ -10628,7 +10776,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 document.getElementById('npProgFill').style.background = grad;
                 document.getElementById('npArt').textContent = '';
                 cosmicArtStyle(document.getElementById('npArt'), t);
-                document.getElementById('npTitle').textContent = t.title;
+                cosmicSetMarqueeText(document.getElementById('npTitle'), t.title);
                 document.getElementById('npArtist').textContent = t.artist;
                 document.getElementById('npDate').textContent = t.year || '';
                 document.getElementById('npOrb1').style.background = `radial-gradient(${t.g[0]},transparent 70%)`;
@@ -11134,10 +11282,12 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 aud.play().then( () => {
                     playing = true;
                     updateUI();
+                    cosmicSchedulePreloadNext();
                 }
                 ).catch( () => {
                     playing = true;
                     updateUI();
+                    cosmicSchedulePreloadNext();
                 }
                 );
             }
@@ -11381,6 +11531,9 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 const lyricsBox = document.getElementById('npLyrics');
                 if (lyricsBox) lyricsBox.scrollTop = 0;
                 updateNpShrink(0);
+                // Le panneau était caché (largeur 0) : on remesure le marquee du
+                // titre maintenant qu'il est visible à sa vraie largeur.
+                cosmicMeasureMarquee(document.getElementById('npTitle'));
             }
             function closeNowPlaying() {
                 document.getElementById('npOverlay').classList.remove('active');
