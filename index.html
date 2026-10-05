@@ -9778,9 +9778,7 @@ toInput.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault()
 .mx-add-mini { width:28px; height:28px; padding:0; justify-content:center; font-size:1rem; margin-left:.3rem; }
 .sb-item .mx-add-mini { opacity:0; flex-shrink:0; }
 .sb-item:hover .mx-add-mini { opacity:1; }
-.mx-add-card { position:absolute; top:8px; right:8px; z-index:3; width:32px; height:32px; margin:0; background:rgba(0,0,0,.55); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); opacity:0; }
-.tcard:hover .mx-add-card { opacity:1; }
-@media (hover:none){ .sb-item .mx-add-mini, .mx-add-card { opacity:1; } }
+@media (hover:none){ .sb-item .mx-add-mini { opacity:1; } }
 
 .mx-check { width:26px; height:26px; border-radius:50%; border:2px solid rgba(255,255,255,.3); display:flex; align-items:center; justify-content:center; font-size:.8rem; color:transparent; flex-shrink:0; transition:.2s; }
 .mx-row.sel { background:rgba(124,58,237,.22); border-color:rgba(167,139,250,.5); }
@@ -11075,7 +11073,6 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                       : `<span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2em;">${t.emoji}</span>`;
                     d.innerHTML = `<div class="tcard-art ${artClass}" style="background:${gradStr(t)};position:relative;">
       ${emojiBadge}
-      <button class="mx-add mx-add-mini mx-add-card" type="button" title="Add playlist" aria-label="Add playlist" onclick="openAddToPlaylist(${i},event)">＋</button>
       <div class="tcard-overlay"><div class="tcard-play-circle"><svg fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
     </div>
     <div class="tcard-title">${t.title}</div>
