@@ -10770,9 +10770,8 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
             // ══ PLAYLISTS — données (Firestore) ══
             // Playlist perso : clouddata/{uid}/musicPlaylists/{id} = { name, trackTitles, createdAt, visibility }
             // visibility = 'private' (défaut) ou 'public' (partagée). Une playlist publique est aussi copiée dans
-            // la collection "musicSharedPlaylists" pour que les autres utilisateurs puissent la voir.
-            // ⚠️ Règles Firestore (projet talcoexchange) à autoriser : lecture de musicSharedPlaylists pour tout
-            // utilisateur connecté, écriture seulement si request.resource.data.ownerUid == request.auth.uid.
+            // un emplacement commun pour que les autres utilisateurs puissent la voir.
+            // Stockage partagé : clouddata/_sharedPlaylists/playlists/{id} (aucune nouvelle règle Firestore nécessaire).
             const SHARED_COL = 'musicSharedPlaylists';
             let sharedPlaylists = [], sharedError = '';
             let plQueue = null;
@@ -10786,7 +10785,8 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                 return cosmicDb.collection('clouddata').doc(cosmicUid).collection('musicPlaylists');
             }
             function sharedRef() {
-                return cosmicDb.collection(SHARED_COL);
+                // Même emplacement que les jeux partagés (clouddata/_sharedGames/games) : déjà autorisé par tes règles actuelles.
+                return cosmicDb.collection('clouddata').doc('_sharedPlaylists').collection('playlists');
             }
             function ownerLabel() {
                 try {
@@ -10853,7 +10853,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                     pl.visibility = vis;
                     return true;
                 } catch (e) {
-                    showToast('⚠️ Partage impossible : ' + (e.code || e.message) + ' (règles Firestore ?)');
+                    showToast('⚠️ Partage impossible : ' + (e.code || e.message));
                     return false;
                 }
             }
@@ -12174,7 +12174,7 @@ const TRACKS = [ { title: "1-28", artist: "—", year: "Inconnu", emoji: "🎵",
                     if (!cosmicSsoEmail) html += '<div class="mx-note">Connecte-toi avec ton compte TalcoITN pour créer et enregistrer des playlists.</div>';
                     html += '<button type="button" class="mx-new" onclick="openPlSettings(\'create\')"><span class="mx-new-ico">＋</span><span><b>Nouvelle playlist</b><small>Nom, visibilité (privée ou publique), puis tes titres</small></span></button>';
                 } else if (sharedError) {
-                    html += '<div class="mx-note">Les playlists partagées sont indisponibles pour le moment (' + mxEsc(sharedError) + '). Vérifie les règles Firestore de la collection « ' + SHARED_COL + ' ».</div>';
+                    html += '<div class="mx-note">Les playlists partagées sont indisponibles pour le moment (' + mxEsc(sharedError) + '). Réessaie dans un instant.</div>';
                 }
                 if (!list.length) {
                     html += plTab === 'mine'
