@@ -44,7 +44,7 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;background:var(--bg);color:var(--tx);font:500 15px/1.5 "Plus Jakarta Sans",system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
 body::before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(60vmax 40vmax at 85% -10%,rgba(139,92,246,.2),transparent 60%),radial-gradient(50vmax 40vmax at -10% 110%,rgba(34,211,238,.12),transparent 60%)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+.wrap{max-width:1440px;margin:0 auto;padding:0 max(clamp(16px,3vw,44px),env(safe-area-inset-right)) 0 max(clamp(16px,3vw,44px),env(safe-area-inset-left))}
 header{position:sticky;top:0;z-index:10;background:rgba(7,10,18,.75);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
 .bar{display:flex;align-items:center;gap:14px;height:64px}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.01em}
@@ -97,12 +97,36 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--mut);font-siz
 #back{position:fixed;z-index:45;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;display:none;border:1px solid var(--line);background:rgba(0,0,0,.65);color:#fff;border-radius:999px;padding:8px 14px;font-weight:600;font-size:13px;font-family:inherit;cursor:pointer;backdrop-filter:blur(10px)}
 #back.on{display:block}
 :focus-visible{outline:2px solid var(--cy);outline-offset:2px}
-@media(max-width:640px){.search{display:none}.tag{display:none}}
+@media(max-width:640px){.tag{display:none}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01s!important}}
 html{scrollbar-width:thin;scrollbar-color:rgba(124,92,255,.55) transparent}
 ::-webkit-scrollbar{width:8px;height:8px}
 ::-webkit-scrollbar-thumb{background:linear-gradient(#7c5cff,#ff5fa8);border-radius:99px;border:2px solid transparent;background-clip:padding-box}
 ::-webkit-scrollbar-track{background:transparent}
+
+/* ===== Adaptation tous écrans : téléphone, tablette, ordinateur ===== */
+.bar{height:auto;min-height:64px;flex-wrap:wrap;padding-top:8px;padding-bottom:8px}
+.grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,285px),1fr))}
+.sec{flex-wrap:wrap}.sec h2{font-size:clamp(22px,3.4vw,30px)}.sec p{font-size:clamp(14px,2vw,16px)}
+.menu{max-width:calc(100vw - 32px)}
+.hero{padding:clamp(24px,5vw,56px) 0 26px}
+@media(max-width:640px){
+  .search{order:3;flex:1 1 100%;max-width:none;margin:0}
+  .search+.cta,.search+.me,.cta,.me{margin-left:auto}
+  .stats{gap:10px}.st{flex:1 1 140px;min-width:0;padding:10px 14px}
+  .grid{gap:14px;padding-bottom:40px}
+  .m{min-height:0;padding:22px 20px 20px;border-radius:22px;display:grid;grid-template-columns:62px 1fr;column-gap:16px;align-items:center}
+  .m .n{top:14px;right:18px}
+  .ic{width:62px;height:62px;border-radius:18px;margin:0;grid-row:span 2}.ic b{width:40px;height:40px;font-size:22px}
+  .m h3{font-size:20px;margin:0 0 4px}.m p{font-size:14px}
+  .more{display:grid;grid-template-columns:1fr;text-align:center}
+}
+@media(min-width:641px) and (max-width:1023px){.grid{gap:18px}.m{min-height:210px;padding:26px 24px}}
+@media(min-width:1800px){.wrap{max-width:1680px}.grid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}}
+@media(max-height:480px) and (orientation:landscape){header{position:static}.hero{padding-top:16px}}
+@media(pointer:coarse){.av{width:44px;height:44px}.cta{padding:11px 18px}#back{padding:11px 16px}}
+@media(hover:none){.m:hover{transform:none;box-shadow:none}}
+#frame{height:100vh;height:100dvh}
 </style>
 </head>
 <body>
@@ -135,6 +159,9 @@ html{scrollbar-width:thin;scrollbar-color:rgba(124,92,255,.55) transparent}
 
 <footer>© 2026 TalcoITN Infrastructure · Mise à jour v3.0</footer>
 
+
+<iframe id="frame" title="Service TalcoITN-3" allow="microphone; camera; autoplay; fullscreen; clipboard-write" referrerpolicy="no-referrer-when-downgrade"></iframe>
+<button id="back" type="button">‹ Portail</button>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -210,7 +237,7 @@ $("#grid").querySelectorAll(".m[data-n]").forEach(b=>b.setAttribute("data-s",(b.
 const FAVICONS={talcoexchange:["icons/icon-192.png"]};   // chemins en plus, par service (relatifs à BASE)
 document.querySelectorAll(".ic[data-s]").forEach(el=>{
   const s=el.dataset.s;
-  const c=[...(FAVICONS[s]||[]).map(x=>BASE+x),BASE+s+"/favicon.ico",BASE+s+"/icons/icon-192.png",BASE+s+"/icons/favicon-48.png"];
+  const c=[...(FAVICONS[s]||[]).map(x=>BASE+x),BASE+s+"/icon-192.png",BASE+s+"/favicon.ico",BASE+s+"/icons/icon-192.png",BASE+s+"/icons/favicon-48.png"];
   (function next(i){
     if(i>=c.length)return;
     const im=new Image();
@@ -229,14 +256,25 @@ $("#q").oninput=e=>{
 };
 addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==$("#q")){e.preventDefault();$("#q").focus()}});
 
-/* Ouverture d’un service : direct si connecté, sinon page de connexion */
-const OPEN_IN_NEW_TAB=true;   // true = nouvel onglet, false = même onglet
+/* Ouverture d’un service : toujours dans une fenêtre intégrée (iframe).
+   Le service propose sa propre connexion ; si la session ITN existe déjà (mêmes apps p0..p4, même navigateur), il se connecte tout seul. */
 let ME=null;
+const SERVICE_URLS="__SERVICE_URLS__";   // remplacé au déploiement par le secret GitHub SERVICE_URLS (JSON : {"exchange":"https://…"})
+const urlOf=n=>{const k=n.toLowerCase().replace(/^talco/,"");const m=(typeof SERVICE_URLS==="object"&&SERVICE_URLS)||{};return m[k]||BASE+"talco"+k+"/"};
+const frame=$("#frame"),back=$("#back");
 function openSvc(n){
-  const url=BASE+n.toLowerCase()+"/";
-  if(ME){OPEN_IN_NEW_TAB?window.open(url,"_blank","noopener"):location.assign(url)}
-  else location.assign(LOGIN_URL+"?to="+encodeURIComponent(n)+"&mode="+(OPEN_IN_NEW_TAB?"tab":"same"));
+  if(!ME){location.assign(LOGIN_URL+"?to="+encodeURIComponent(n));return}
+  frame.src=urlOf(n);frame.classList.add("on");back.classList.add("on");
+  document.documentElement.style.overflow="hidden";history.pushState({svc:n},"");
 }
+function closeSvc(pop){
+  if(!frame.classList.contains("on"))return;
+  frame.classList.remove("on");back.classList.remove("on");document.documentElement.style.overflow="";
+  setTimeout(()=>{if(!frame.classList.contains("on"))frame.removeAttribute("src")},700);
+  if(!pop&&history.state&&history.state.svc)history.back();
+}
+back.onclick=()=>closeSvc();
+addEventListener("popstate",()=>closeSvc(true));
 
 /* Menu compte */
 $("#av").onclick=e=>{e.stopPropagation();$("#menu").classList.toggle("on")};
@@ -264,6 +302,8 @@ $("#out").onclick=async()=>{
   $("#av").textContent=((prenom[0]||"")+(nom[0]||"")).toUpperCase()||"T";
   $("#tag").textContent="Session active";
   $("#login").hidden=true;$("#meBox").hidden=false;
+  const o=new URLSearchParams(location.search).get("open");
+  if(o&&/^Talco[A-Za-z]{2,40}$/.test(o)){history.replaceState(null,"",location.pathname);openSvc(o)}
 })();
 if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>

@@ -134,6 +134,15 @@ form{margin-top:18px;text-align:left}
 .alt{margin:8px 0 0;text-align:center;font-size:14px;color:var(--mut)}
 .alt a,.alt button{color:var(--tx);font-weight:600;font-size:14px;line-height:1;font-family:inherit;text-decoration:none;background:none;border:0;padding:4px;cursor:pointer;border-bottom:1px solid var(--edge2)}
 .alt .sep{margin:0 8px;opacity:.5}
+.hd,.pn{min-width:0}
+@media (min-width:600px) and (max-aspect-ratio:1/1){.card{width:480px;padding:44px 36px 32px}.app{width:104px;height:104px;border-radius:25px}h1{font-size:34px}}
+@media (min-width:720px) and (min-aspect-ratio:1/1){
+  .card{width:min(880px,100%);display:grid;grid-template-columns:1fr 1.05fr;gap:8px 36px;align-items:center;padding:40px 38px}
+  .app{width:128px;height:128px;border-radius:30px}h1{font-size:38px}.sub{font-size:17px}form{margin-top:0}}
+@media (min-width:1280px) and (min-aspect-ratio:1/1){.card{width:min(980px,100%);padding:48px 52px;gap:8px 56px}}
+@media (max-height:600px){.app{width:60px;height:60px;border-radius:15px}h1{font-size:24px;margin-top:10px}.card{padding:18px 20px 14px}.field{margin-top:8px}.row{margin-top:10px}.slide{margin-top:12px}}
+@media (max-height:600px) and (min-width:720px){.card{padding:20px 28px}.app{width:76px;height:76px}}
+@media (pointer:coarse){.eye{width:48px;height:48px;top:6px}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:2px solid var(--p);outline-offset:3px}
 .card:has(.alt)>footer{margin-top:6px}
@@ -143,10 +152,13 @@ form{margin-top:18px;text-align:left}
 <body>
 <div class="bg" aria-hidden="true"><i></i><i></i><i></i></div>
 <main class="card" id="card">
+<div class="hd">
   <img class="app" src="icon-192.png" width="92" height="92" alt="TalcoITN-3">
   <h1>TalcoITN-3</h1>
   <p class="sub">Talco-IT-Networks</p>
 
+</div>
+<div class="pn">
   <form id="f" novalidate>
     <div class="field">
       <input id="u" name="username" type="text" placeholder=" " autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next" inputmode="email">
@@ -176,9 +188,12 @@ form{margin-top:18px;text-align:left}
     <button class="sr" type="submit" tabindex="-1">Se connecter</button>
   </form>
 
-  <p class="alt"><a id="signup" href="https://natlacaxi.github.io/talcoexchange/">Créer un compte</a><span class="sep">·</span><button id="install" type="button" hidden>Installer l’appli</button></p>
+  <p class="alt"><button id="install" type="button" hidden>Installer l’appli</button></p>
   <noscript><p class="msg">JavaScript est nécessaire pour se connecter.</p></noscript>
+</div>
 </main>
+
+
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -200,7 +215,7 @@ var CONFIGS=[
 /* ---------- destination après connexion ---------- */
 var q=new URLSearchParams(location.search);
 var to=(q.get("to")||"").replace(/[^A-Za-z0-9]/g,"").slice(0,40);
-var DEST=to?BASE+to.toLowerCase()+"/":HOME;
+var DEST=to?HOME+"?open="+to:HOME;   // retour au portail, qui ouvre directement le service demandé
 
 /* ---------- Firebase : mêmes noms d’apps (p0..p4) que le portail ---------- */
 var auths=[];
@@ -328,6 +343,7 @@ function existing(){
   });
 }
 existing().then(function(user){if(user&&!q.has("relog")){measure();success(user.email||"")}});
+
 
 /* ---------- installer l’appli ---------- */
 var inst=$("#install"),dp=null;
