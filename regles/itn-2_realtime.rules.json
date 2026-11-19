@@ -1,0 +1,78 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "pseudos": {
+      "$p": {
+        ".read": true,
+        ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
+        ".validate": "$p.matches(/^[a-z0-9_-]{3,20}$/) && newData.hasChildren(['uid', 'email']) && newData.child('email').val() === auth.token.email && newData.parent().parent().child('users').child(auth.uid).child('pseudo').val() === $p",
+        "uid": {
+          ".validate": "newData.isString()"
+        },
+        "email": {
+          ".validate": "newData.isString()"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && !data.exists()",
+        ".validate": "newData.hasChildren(['prenom', 'nom', 'tel', 'email', 'pseudo', 'invite', 'createdAt'])",
+        "prenom": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 50"
+        },
+        "nom": {
+          ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 50"
+        },
+        "tel": {
+          ".validate": "newData.isString() && newData.val().matches(/^\\+?[0-9 .-]{6,20}$/)"
+        },
+        "email": {
+          ".validate": "newData.isString() && newData.val() === auth.token.email"
+        },
+        "pseudo": {
+          ".validate": "newData.isString() && newData.val().matches(/^[a-z0-9_-]{3,20}$/) && newData.parent().parent().parent().child('pseudos').child(newData.val()).child('uid').val() === $uid"
+        },
+        "invite": {
+          ".validate": "newData.val() === '26866569389'"
+        },
+        "createdAt": {
+          ".validate": "newData.val() === now"
+        },
+        "prefs": {
+          ".write": "auth != null && auth.uid === $uid && auth.token.email_verified === true && root.child('users').child($uid).exists()",
+          ".validate": "newData.hasChildren(['color', 'blur', 'op', 'order'])",
+          "color": {
+            ".validate": "newData.isString() && newData.val().matches(/^#[0-9a-fA-F]{6}$/)"
+          },
+          "blur": {
+            ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 40"
+          },
+          "op": {
+            ".validate": "newData.isNumber() && newData.val() >= 30 && newData.val() <= 100"
+          },
+          "order": {
+            ".validate": "newData.isString() && newData.val().length <= 400"
+          },
+          "$other": {
+            ".validate": false
+          }
+        },
+        "sso": {
+          "$svc": {
+            ".write": "auth != null && auth.uid === $uid && auth.token.email_verified === true && !data.exists() && root.child('users').child($uid).exists()",
+            ".validate": "$svc.matches(/^[a-z]{2,20}$/) && newData.isString() && newData.val().length >= 32 && newData.val().length <= 64"
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

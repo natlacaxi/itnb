@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Le portail utilise Realtime Database, pas Firestore : tout est fermé.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
