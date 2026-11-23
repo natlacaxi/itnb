@@ -1,20 +1,9 @@
-TalcoITN-3 — contenu du zip
+TalcoITN-3 — portail (racine du depot GitHub : index.html, login.html, favicons, manifest, dark/ light/ gray/)
 
-Racine ............ index.html, login.html, favicons, manifest (a mettre a la racine du depot GitHub)
-dark/ light/ gray/  variantes des favicons
+Les regles Firebase, les donnees a importer et la procedure de reinitialisation sont dans firebase-prive.zip (PAS sur GitHub).
 
-Exchange est un depot SEPARE (TalcoExchange.zip), servi sur https://natlacaxi.github.io/exchange-3/
-et ouvert par le portail en iframe. La liaison de connexion est deja integree dans Exchange
-(plus de fichier exchange-sso.js a coller).
+Modules (depots separes, sur https://natlacaxi.github.io/) :
+  exchange-3/ ..... login commun Exchange (zip exchange-3-login) ; il ouvre l'interface secrete (zip exchange-interface)
+  administration/ . TalcoAdministration (zip administration)
 
-regles/ (console Firebase > Build > ...)
-  itn-2_realtime.rules.json ........ itn-2 > Realtime Database > Regles  (portail : comptes, pseudos, preferences, cle SSO)
-  itn-2_firestore.rules ............ itn-2 > Firestore > Regles  (tout ferme)
-  itn-2_firestore_si_utilise.rules . a la place du precedent SEULEMENT si un module utilise Firestore sur itn-2
-  itn-3_realtime.rules.json ........ itn-3 > Realtime Database > Regles  (Exchange)
-  itn-3_firestore.rules ............ itn-3 > Firestore > Regles  (tout ferme)
-
-Rappels
-- itn-2 : si d'autres modules ecrivent dans la Realtime Database, fusionne au lieu de remplacer.
-- Firebase > Authentication > Domaines autorises : ajouter natlacaxi.github.io (itn-2 et itn-3).
-- Activer Email/Mot de passe dans Authentication sur itn-2 et itn-3.
+Rappel : Authentication > Domaines autorises : natlacaxi.github.io (itn-2, itn-3) + le domaine talcoitn-... (itn-3).
