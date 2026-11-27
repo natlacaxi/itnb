@@ -1,0 +1,68 @@
+name: Déployer le zip sur GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.zip"
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  ZIP_NAME: talco-complet.zip
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Décompresser et contrôler le zip
+        run: |
+          set -e
+          Z="$ZIP_NAME"
+          if [ ! -f "$Z" ]; then
+            Z=$(ls -t *.zip 2>/dev/null | head -n 1 || true)
+            [ -n "$Z" ] && echo "::warning::$ZIP_NAME absent, utilisation de $Z"
+          fi
+          [ -f "$Z" ] || { echo "::error::Aucun zip à la racine du dépôt (attendu : $ZIP_NAME)."; exit 1; }
+          rm -rf _site && mkdir _site
+          unzip -q "$Z" -d _site
+          # zip contenant un seul dossier : on remonte son contenu
+          if [ ! -f _site/index.html ] && [ "$(ls -A _site | wc -l)" = "1" ] && [ -d "_site/$(ls _site)" ]; then
+            D="_site/$(ls _site)"
+            mv "$D"/* _site/ 2>/dev/null || true
+            mv "$D"/.[!.]* _site/ 2>/dev/null || true
+            rmdir "$D" 2>/dev/null || true
+          fi
+          rm -rf _site/__MACOSX _site/regles
+          rm -f _site/LISEZMOI.txt _site/database.rules.json _site/firestore.rules
+          # garde-fou 1 : jamais de fichiers privés en ligne
+          if find _site \( -name "*.rules.json" -o -name "*firestore.rules" -o -name "GUIDE_A_Z.txt" -o -name "DONNEES_*" -o -name "REGLES_*" -o -name "*donnees_a_importer*" \) | grep -q .; then
+            echo "::error::Fichiers privés détectés dans le zip (règles, données, guide). Publication annulée."; exit 1
+          fi
+          # garde-fou 2 : ce zip est bien celui de ce site
+          test -f _site/index.html || { echo "::error::index.html introuvable dans le zip."; exit 1; }
+          ( grep -q 'TalcoITN' _site/index.html && grep -q 'SERVICES' _site/index.html ) || { echo "::error::Ce zip n'est pas celui de ce dépôt (attendu : $ZIP_NAME). Publication annulée."; exit 1; }
+          echo "Contenu publié :"; ls -la _site | head -40
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
